@@ -1,0 +1,1363 @@
+import React, { useState, useEffect } from 'react';
+
+const API_URL = 'http://localhost:3001/api';
+const ADMIN_TOKEN = 'admin-secret-token'; // In production, use proper authentication
+
+const AdminDashboard = () => {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [stats, setStats] = useState(null);
+  const [submissions, setSubmissions] = useState([]);
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [publishedTenders, setPublishedTenders] = useState([]);
+  const [showTenderForm, setShowTenderForm] = useState(false);
+  const [downloadsLog, setDownloadsLog] = useState([]);
+  const [downloadsStats, setDownloadsStats] = useState(null);
+  const [visitsLog, setVisitsLog] = useState([]);
+  const [visitsStats, setVisitsStats] = useState(null);
+
+  const headers = {
+    'Authorization': `Bearer ${ADMIN_TOKEN}`,
+    'Content-Type': 'application/json'
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== 'overview' && activeTab !== 'publish-tender' && activeTab !== 'downloads' && activeTab !== 'visits') {
+      fetchSubmissions(activeTab);
+    } else if (activeTab === 'publish-tender') {
+      fetchPublishedTenders();
+    } else if (activeTab === 'downloads') {
+      fetchDownloadsLog();
+      fetchDownloadsStats();
+    } else if (activeTab === 'visits') {
+      fetchVisitsLog();
+      fetchVisitsStats();
+    }
+  }, [activeTab]);
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch(`${API_URL}/admin/stats`, { headers });
+      const data = await response.json();
+      setStats(data);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchSubmissions = async (type) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/admin/submissions/${type}`, { headers });
+      const data = await response.json();
+      setSubmissions(data.submissions || []);
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPublishedTenders = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/admin/tenders/all`, { headers });
+      const data = await response.json();
+      setPublishedTenders(data);
+    } catch (error) {
+      console.error('Error fetching tenders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDownloadsLog = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/admin/downloads?limit=100`, { headers });
+      const data = await response.json();
+      setDownloadsLog(data.downloads || []);
+    } catch (error) {
+      console.error('Error fetching downloads log:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDownloadsStats = async () => {
+    try {
+      const response = await fetch(`${API_URL}/admin/downloads/stats`, { headers });
+      const data = await response.json();
+      setDownloadsStats(data);
+    } catch (error) {
+      console.error('Error fetching downloads stats:', error);
+    }
+  };
+
+  const fetchVisitsLog = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/admin/visits?limit=100`, { headers });
+      const data = await response.json();
+      setVisitsLog(data.visits || []);
+    } catch (error) {
+      console.error('Error fetching visits log:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchVisitsStats = async () => {
+    try {
+      const response = await fetch(`${API_URL}/admin/visits/stats`, { headers });
+      const data = await response.json();
+      setVisitsStats(data);
+    } catch (error) {
+      console.error('Error fetching visits stats:', error);
+    }
+  };
+
+  const updateSubmissionStatus = async (id, status, notes) => {
+    try {
+      await fetch(`${API_URL}/admin/submission/${id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ status, notes })
+      });
+      fetchSubmissions(activeTab);
+      setSelectedSubmission(null);
+      fetchStats();
+    } catch (error) {
+      console.error('Error updating submission:', error);
+    }
+  };
+
+  const deleteSubmission = async (id) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا الطلب؟')) return;
+
+    try {
+      await fetch(`${API_URL}/admin/submission/${id}`, {
+        method: 'DELETE',
+        headers
+      });
+      fetchSubmissions(activeTab);
+      setSelectedSubmission(null);
+      fetchStats();
+    } catch (error) {
+      console.error('Error deleting submission:', error);
+    }
+  };
+
+  const deleteTender = async (id) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا المكرز؟')) return;
+
+    try {
+      await fetch(`${API_URL}/admin/tenders/${id}`, {
+        method: 'DELETE',
+        headers
+      });
+      fetchPublishedTenders();
+    } catch (error) {
+      console.error('Error deleting tender:', error);
+    }
+  };
+
+  const renderOverview = () => {
+    if (!stats) return <div style={styles.loading}>جاري التحميل...</div>;
+
+    return (
+      <div style={styles.overviewContainer}>
+        <h2 style={styles.sectionTitle}>لوحة المراقبة</h2>
+
+        <div style={styles.statsGrid}>
+          <div style={styles.statCard}>
+            <div style={styles.statIcon}>📄</div>
+            <h3 style={styles.statTitle}>طلبات المصادقة</h3>
+            <div style={styles.statNumber}>{stats.documentAuth.total}</div>
+            <div style={styles.statBreakdown}>
+              <span>قيد الانتظار: {stats.documentAuth.pending}</span>
+              <span>مقبول: {stats.documentAuth.approved}</span>
+              <span>مرفوض: {stats.documentAuth.rejected}</span>
+            </div>
+          </div>
+
+          <div style={styles.statCard}>
+            <div style={styles.statIcon}>📋</div>
+            <h3 style={styles.statTitle}>طلبات المستندات</h3>
+            <div style={styles.statNumber}>{stats.officialDoc.total}</div>
+            <div style={styles.statBreakdown}>
+              <span>قيد الانتظار: {stats.officialDoc.pending}</span>
+              <span>مقبول: {stats.officialDoc.approved}</span>
+              <span>مرفوض: {stats.officialDoc.rejected}</span>
+            </div>
+          </div>
+
+          <div style={styles.statCard}>
+            <div style={styles.statIcon}>🏗️</div>
+            <h3 style={styles.statTitle}>عروض المناقصات</h3>
+            <div style={styles.statNumber}>{stats.tenders.total}</div>
+            <div style={styles.statBreakdown}>
+              <span>قيد الانتظار: {stats.tenders.pending}</span>
+              <span>مقبول: {stats.tenders.approved}</span>
+              <span>مرفوض: {stats.tenders.rejected}</span>
+            </div>
+          </div>
+
+          <div style={styles.statCard}>
+            <div style={styles.statIcon}>🔍</div>
+            <h3 style={styles.statTitle}>طلبات الشهادات</h3>
+            <div style={styles.statNumber}>{stats.certificates.total}</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderSubmissionsList = () => {
+    if (loading) return <div style={styles.loading}>جاري التحميل...</div>;
+
+    const getTitleByType = () => {
+      switch(activeTab) {
+        case 'documentAuth': return 'طلبات مصادقة المستندات';
+        case 'officialDoc': return 'طلبات إعداد المستندات';
+        case 'tenders': return 'عروض المناقصات';
+        case 'certificates': return 'طلبات الشهادات';
+        default: return 'الطلبات';
+      }
+    };
+
+    return (
+      <div>
+        <h2 style={styles.sectionTitle}>{getTitleByType()}</h2>
+
+        {submissions.length === 0 ? (
+          <div style={styles.emptyState}>لا توجد طلبات حالياً</div>
+        ) : (
+          <div style={styles.submissionsTable}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th>رقم الطلب</th>
+                  <th>الاسم</th>
+                  <th>تاريخ التقديم</th>
+                  <th>الحالة</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {submissions.map(submission => (
+                  <tr key={submission.id}>
+                    <td>{submission.id}</td>
+                    <td>{submission.data?.fullName || submission.data?.name || 'غير متوفر'}</td>
+                    <td>{new Date(submission.submittedAt).toLocaleDateString('ar')}</td>
+                    <td>
+                      <span style={{
+                        ...styles.statusBadge,
+                        ...(submission.status === 'pending' && styles.statusPending),
+                        ...(submission.status === 'approved' && styles.statusApproved),
+                        ...(submission.status === 'rejected' && styles.statusRejected)
+                      }}>
+                        {submission.status === 'pending' && 'قيد الانتظار'}
+                        {submission.status === 'approved' && 'مقبول'}
+                        {submission.status === 'rejected' && 'مرفوض'}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => setSelectedSubmission(submission)}
+                        style={styles.viewBtn}
+                      >
+                        عرض
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {selectedSubmission && renderSubmissionDetails()}
+      </div>
+    );
+  };
+
+  const renderSubmissionDetails = () => {
+    return (
+      <div style={styles.modal} onClick={() => setSelectedSubmission(null)}>
+        <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+          <div style={styles.modalHeader}>
+            <h3>تفاصيل الطلب #{selectedSubmission.id}</h3>
+            <button onClick={() => setSelectedSubmission(null)} style={styles.closeBtn}>✕</button>
+          </div>
+
+          <div style={styles.modalBody}>
+            <div style={styles.detailsGrid}>
+              {Object.entries(selectedSubmission.data).map(([key, value]) => (
+                <div key={key} style={styles.detailItem}>
+                  <strong>{key}:</strong> {typeof value === 'object' ? JSON.stringify(value) : value}
+                </div>
+              ))}
+            </div>
+
+            {selectedSubmission.files && selectedSubmission.files.length > 0 && (
+              <div style={styles.filesSection}>
+                <h4>المرفقات:</h4>
+                {selectedSubmission.files.map((file, index) => (
+                  <div key={index} style={styles.fileItem}>
+                    <span>📎 {file.originalname}</span>
+                    <a href={`${API_URL.replace('/api', '')}/${file.path}`} target="_blank" rel="noopener noreferrer">
+                      تحميل
+                    </a>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={styles.actionsSection}>
+              <h4>تحديث الحالة:</h4>
+              <div style={styles.actionButtons}>
+                <button
+                  onClick={() => updateSubmissionStatus(selectedSubmission.id, 'approved', '')}
+                  style={{ ...styles.actionBtn, ...styles.approveBtn }}
+                >
+                  قبول
+                </button>
+                <button
+                  onClick={() => updateSubmissionStatus(selectedSubmission.id, 'rejected', '')}
+                  style={{ ...styles.actionBtn, ...styles.rejectBtn }}
+                >
+                  رفض
+                </button>
+                <button
+                  onClick={() => deleteSubmission(selectedSubmission.id)}
+                  style={{ ...styles.actionBtn, ...styles.deleteBtn }}
+                >
+                  حذف
+                </button>
+              </div>
+
+              <div style={styles.notesSection}>
+                <label>ملاحظات:</label>
+                <textarea
+                  value={selectedSubmission.notes || ''}
+                  onChange={(e) => setSelectedSubmission({...selectedSubmission, notes: e.target.value})}
+                  style={styles.notesInput}
+                  rows={4}
+                />
+                <button
+                  onClick={() => updateSubmissionStatus(selectedSubmission.id, selectedSubmission.status, selectedSubmission.notes)}
+                  style={styles.saveNotesBtn}
+                >
+                  حفظ الملاحظات
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const getPageName = (page) => {
+    const pageNames = {
+      'home': 'الصفحة الرئيسية',
+      'eligibility': 'فحص الاستحقاق',
+      'certificate': 'شهادة السكن',
+      'documentAuth': 'مصادقة المستندات',
+      'tenders': 'المناقصات',
+      'officialDoc': 'طلب مستند رسمي',
+      'admin': 'لوحة الإدارة'
+    };
+    return pageNames[page] || page;
+  };
+
+  const renderVisitsLog = () => {
+    if (loading) return <div style={styles.loading}>جاري التحميل...</div>;
+
+    return (
+      <div>
+        <h2 style={styles.sectionTitle}>سجل زيارات الموقع</h2>
+
+        {/* Stats Cards */}
+        {visitsStats && (
+          <div style={styles.downloadsStatsGrid}>
+            <div style={styles.downloadStatCard}>
+              <div style={styles.downloadStatIcon}>👁️</div>
+              <div style={styles.downloadStatInfo}>
+                <span style={styles.downloadStatNumber}>{visitsStats.today}</span>
+                <span style={styles.downloadStatLabel}>زيارات اليوم</span>
+              </div>
+            </div>
+            <div style={styles.downloadStatCard}>
+              <div style={styles.downloadStatIcon}>📆</div>
+              <div style={styles.downloadStatInfo}>
+                <span style={styles.downloadStatNumber}>{visitsStats.thisWeek}</span>
+                <span style={styles.downloadStatLabel}>هذا الأسبوع</span>
+              </div>
+            </div>
+            <div style={styles.downloadStatCard}>
+              <div style={styles.downloadStatIcon}>📊</div>
+              <div style={styles.downloadStatInfo}>
+                <span style={styles.downloadStatNumber}>{visitsStats.thisMonth}</span>
+                <span style={styles.downloadStatLabel}>هذا الشهر</span>
+              </div>
+            </div>
+            <div style={styles.downloadStatCard}>
+              <div style={styles.downloadStatIcon}>🌐</div>
+              <div style={styles.downloadStatInfo}>
+                <span style={styles.downloadStatNumber}>{visitsStats.uniqueIPs}</span>
+                <span style={styles.downloadStatLabel}>زوار فريدين</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Page Stats */}
+        {visitsStats && visitsStats.pageStats && (
+          <div style={styles.pageStatsCard}>
+            <h3 style={styles.pageStatsTitle}>📈 إحصائيات الصفحات</h3>
+            <div style={styles.pageStatsList}>
+              {Object.entries(visitsStats.pageStats)
+                .sort((a, b) => b[1] - a[1])
+                .map(([page, count]) => (
+                  <div key={page} style={styles.pageStatItem}>
+                    <span style={styles.pageStatName}>{getPageName(page)}</span>
+                    <span style={styles.pageStatCount}>{count} زيارة</span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* Visits Table */}
+        {visitsLog.length === 0 ? (
+          <div style={styles.emptyState}>لا توجد زيارات مسجلة حتى الآن</div>
+        ) : (
+          <div style={styles.submissionsTable}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.tableHeader}>الصفحة</th>
+                  <th style={styles.tableHeader}>تاريخ ووقت الزيارة</th>
+                  <th style={styles.tableHeader}>عنوان IP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visitsLog.map((visit, index) => (
+                  <tr key={visit.id || index} style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <span style={styles.pageBadge}>{getPageName(visit.page)}</span>
+                    </td>
+                    <td style={styles.tableCell}>
+                      {new Date(visit.visitedAt).toLocaleString('ar-EG', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                      })}
+                    </td>
+                    <td style={styles.tableCell}>
+                      <span style={styles.ipBadge}>{visit.ipAddress}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <button onClick={() => { fetchVisitsLog(); fetchVisitsStats(); }} style={styles.refreshBtn}>
+          🔄 تحديث البيانات
+        </button>
+      </div>
+    );
+  };
+
+  const renderDownloadsLog = () => {
+    if (loading) return <div style={styles.loading}>جاري التحميل...</div>;
+
+    return (
+      <div>
+        <h2 style={styles.sectionTitle}>سجل تنزيلات شهادات السكن</h2>
+
+        {/* Stats Cards */}
+        {downloadsStats && (
+          <div style={styles.downloadsStatsGrid}>
+            <div style={styles.downloadStatCard}>
+              <div style={styles.downloadStatIcon}>📅</div>
+              <div style={styles.downloadStatInfo}>
+                <span style={styles.downloadStatNumber}>{downloadsStats.today}</span>
+                <span style={styles.downloadStatLabel}>تنزيلات اليوم</span>
+              </div>
+            </div>
+            <div style={styles.downloadStatCard}>
+              <div style={styles.downloadStatIcon}>📆</div>
+              <div style={styles.downloadStatInfo}>
+                <span style={styles.downloadStatNumber}>{downloadsStats.thisWeek}</span>
+                <span style={styles.downloadStatLabel}>هذا الأسبوع</span>
+              </div>
+            </div>
+            <div style={styles.downloadStatCard}>
+              <div style={styles.downloadStatIcon}>📊</div>
+              <div style={styles.downloadStatInfo}>
+                <span style={styles.downloadStatNumber}>{downloadsStats.thisMonth}</span>
+                <span style={styles.downloadStatLabel}>هذا الشهر</span>
+              </div>
+            </div>
+            <div style={styles.downloadStatCard}>
+              <div style={styles.downloadStatIcon}>👥</div>
+              <div style={styles.downloadStatInfo}>
+                <span style={styles.downloadStatNumber}>{downloadsStats.uniqueIds}</span>
+                <span style={styles.downloadStatLabel}>مستخدمين فريدين</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Downloads Table */}
+        {downloadsLog.length === 0 ? (
+          <div style={styles.emptyState}>لا توجد تنزيلات مسجلة حتى الآن</div>
+        ) : (
+          <div style={styles.submissionsTable}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.tableHeader}>رقم الهوية</th>
+                  <th style={styles.tableHeader}>رقم الصفحة</th>
+                  <th style={styles.tableHeader}>تاريخ ووقت التنزيل</th>
+                  <th style={styles.tableHeader}>عنوان IP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {downloadsLog.map((log, index) => (
+                  <tr key={log.id || index} style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <span style={styles.idBadge}>{log.idNumber}</span>
+                    </td>
+                    <td style={styles.tableCell}>{log.pageNumber}</td>
+                    <td style={styles.tableCell}>
+                      {new Date(log.downloadedAt).toLocaleString('ar-EG', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </td>
+                    <td style={styles.tableCell}>
+                      <span style={styles.ipBadge}>{log.ipAddress}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <button onClick={() => { fetchDownloadsLog(); fetchDownloadsStats(); }} style={styles.refreshBtn}>
+          🔄 تحديث البيانات
+        </button>
+      </div>
+    );
+  };
+
+  const renderPublishTender = () => {
+    return (
+      <div>
+        <div style={styles.headerRow}>
+          <h2 style={styles.sectionTitle}>إدارة المناقصات</h2>
+          <button onClick={() => setShowTenderForm(!showTenderForm)} style={styles.publishBtn}>
+            {showTenderForm ? 'إلغاء' : '+ نشر مناقصة جديدة'}
+          </button>
+        </div>
+
+        {showTenderForm && <TenderForm onSuccess={() => { setShowTenderForm(false); fetchPublishedTenders(); }} />}
+
+        <div style={styles.tendersGrid}>
+          {publishedTenders.map(tender => (
+            <div key={tender.id} style={styles.tenderCard}>
+              <div style={styles.tenderHeader}>
+                <h3>{tender.title}</h3>
+                <span style={{
+                  ...styles.statusBadge,
+                  ...(tender.status === 'active' && styles.statusApproved),
+                  ...(tender.status === 'closed' && styles.statusRejected)
+                }}>
+                  {tender.status === 'active' ? 'نشط' : 'مغلق'}
+                </span>
+              </div>
+              <p style={styles.tenderDesc}>{tender.description}</p>
+              <div style={styles.tenderDetails}>
+                <div><strong>الموعد النهائي:</strong> {new Date(tender.deadline).toLocaleDateString('ar')}</div>
+                <div><strong>الميزانية:</strong> {tender.budget} ₪</div>
+              </div>
+              <div style={styles.tenderActions}>
+                <button onClick={() => deleteTender(tender.id)} style={styles.deleteTenderBtn}>
+                  حذف
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={styles.container}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700&display=swap');
+
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+      `}</style>
+
+      <div style={styles.sidebar}>
+        <div style={styles.logo}>
+          <span style={styles.logoIcon}>⚙️</span>
+          <h2>لوحة التحكم</h2>
+        </div>
+
+        <nav style={styles.nav}>
+          <button
+            onClick={() => setActiveTab('overview')}
+            style={{ ...styles.navBtn, ...(activeTab === 'overview' && styles.navBtnActive) }}
+          >
+            📊 نظرة عامة
+          </button>
+          <button
+            onClick={() => setActiveTab('documentAuth')}
+            style={{ ...styles.navBtn, ...(activeTab === 'documentAuth' && styles.navBtnActive) }}
+          >
+            📄 طلبات المصادقة
+          </button>
+          <button
+            onClick={() => setActiveTab('officialDoc')}
+            style={{ ...styles.navBtn, ...(activeTab === 'officialDoc' && styles.navBtnActive) }}
+          >
+            📋 طلبات المستندات
+          </button>
+          <button
+            onClick={() => setActiveTab('tenders')}
+            style={{ ...styles.navBtn, ...(activeTab === 'tenders' && styles.navBtnActive) }}
+          >
+            🏗️ عروض المناقصات
+          </button>
+          <button
+            onClick={() => setActiveTab('certificates')}
+            style={{ ...styles.navBtn, ...(activeTab === 'certificates' && styles.navBtnActive) }}
+          >
+            🔍 طلبات الشهادات
+          </button>
+          <button
+            onClick={() => setActiveTab('downloads')}
+            style={{ ...styles.navBtn, ...(activeTab === 'downloads' && styles.navBtnActive) }}
+          >
+            📥 سجل التنزيلات
+          </button>
+          <button
+            onClick={() => setActiveTab('visits')}
+            style={{ ...styles.navBtn, ...(activeTab === 'visits' && styles.navBtnActive) }}
+          >
+            👁️ سجل الزيارات
+          </button>
+          <button
+            onClick={() => setActiveTab('publish-tender')}
+            style={{ ...styles.navBtn, ...(activeTab === 'publish-tender' && styles.navBtnActive) }}
+          >
+            📢 نشر مناقصة
+          </button>
+        </nav>
+      </div>
+
+      <div style={styles.main}>
+        <div style={styles.header}>
+          <h1>اللجنة المحلية - الحسينية</h1>
+          <div style={styles.userInfo}>
+            <span>مسؤول</span>
+            <div style={styles.avatar}>A</div>
+          </div>
+        </div>
+
+        <div style={styles.content}>
+          {activeTab === 'overview' && renderOverview()}
+          {['documentAuth', 'officialDoc', 'tenders', 'certificates'].includes(activeTab) && renderSubmissionsList()}
+          {activeTab === 'downloads' && renderDownloadsLog()}
+          {activeTab === 'visits' && renderVisitsLog()}
+          {activeTab === 'publish-tender' && renderPublishTender()}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const TenderForm = ({ onSuccess }) => {
+  const [formData, setFormData] = useState({
+    title: '',
+    titleHe: '',
+    description: '',
+    descriptionHe: '',
+    category: 'construction',
+    deadline: '',
+    budget: '',
+    requirements: '',
+    contactEmail: '',
+    contactPhone: '',
+    status: 'active'
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch(`${API_URL}/admin/tenders/publish`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${ADMIN_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tenderData: JSON.stringify(formData) })
+      });
+
+      if (response.ok) {
+        alert('تم نشر المناقصة بنجاح');
+        onSuccess();
+      }
+    } catch (error) {
+      console.error('Error publishing tender:', error);
+      alert('حدث خطأ أثناء نشر المناقصة');
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} style={styles.tenderForm}>
+      <div style={styles.formGrid}>
+        <div style={styles.formGroup}>
+          <label>العنوان (عربي)</label>
+          <input
+            type="text"
+            value={formData.title}
+            onChange={(e) => setFormData({...formData, title: e.target.value})}
+            required
+            style={styles.input}
+          />
+        </div>
+
+        <div style={styles.formGroup}>
+          <label>العنوان (עברית)</label>
+          <input
+            type="text"
+            value={formData.titleHe}
+            onChange={(e) => setFormData({...formData, titleHe: e.target.value})}
+            required
+            style={styles.input}
+          />
+        </div>
+
+        <div style={{ ...styles.formGroup, gridColumn: '1 / -1' }}>
+          <label>الوصف (عربي)</label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => setFormData({...formData, description: e.target.value})}
+            required
+            style={styles.textarea}
+            rows={3}
+          />
+        </div>
+
+        <div style={{ ...styles.formGroup, gridColumn: '1 / -1' }}>
+          <label>الوصف (עברית)</label>
+          <textarea
+            value={formData.descriptionHe}
+            onChange={(e) => setFormData({...formData, descriptionHe: e.target.value})}
+            required
+            style={styles.textarea}
+            rows={3}
+          />
+        </div>
+
+        <div style={styles.formGroup}>
+          <label>الفئة</label>
+          <select
+            value={formData.category}
+            onChange={(e) => setFormData({...formData, category: e.target.value})}
+            style={styles.input}
+          >
+            <option value="construction">بناء</option>
+            <option value="maintenance">صيانة</option>
+            <option value="supply">توريد</option>
+          </select>
+        </div>
+
+        <div style={styles.formGroup}>
+          <label>الموعد النهائي</label>
+          <input
+            type="date"
+            value={formData.deadline}
+            onChange={(e) => setFormData({...formData, deadline: e.target.value})}
+            required
+            style={styles.input}
+          />
+        </div>
+
+        <div style={styles.formGroup}>
+          <label>الميزانية (₪)</label>
+          <input
+            type="number"
+            value={formData.budget}
+            onChange={(e) => setFormData({...formData, budget: e.target.value})}
+            required
+            style={styles.input}
+          />
+        </div>
+
+        <div style={styles.formGroup}>
+          <label>بريد التواصل</label>
+          <input
+            type="email"
+            value={formData.contactEmail}
+            onChange={(e) => setFormData({...formData, contactEmail: e.target.value})}
+            required
+            style={styles.input}
+          />
+        </div>
+
+        <div style={{ ...styles.formGroup, gridColumn: '1 / -1' }}>
+          <label>المتطلبات</label>
+          <textarea
+            value={formData.requirements}
+            onChange={(e) => setFormData({...formData, requirements: e.target.value})}
+            style={styles.textarea}
+            rows={3}
+          />
+        </div>
+      </div>
+
+      <button type="submit" style={styles.submitBtn}>نشر المناقصة</button>
+    </form>
+  );
+};
+
+const styles = {
+  container: {
+    display: 'flex',
+    minHeight: '100vh',
+    fontFamily: "'Tajawal', sans-serif",
+    direction: 'rtl',
+    background: '#f5f7fa',
+  },
+  sidebar: {
+    width: '280px',
+    background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
+    padding: '24px',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  logo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginBottom: '40px',
+    color: '#fff',
+  },
+  logoIcon: {
+    fontSize: '32px',
+  },
+  nav: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  navBtn: {
+    padding: '14px 16px',
+    background: 'transparent',
+    border: 'none',
+    borderRadius: '8px',
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'right',
+    cursor: 'pointer',
+    fontSize: '15px',
+    fontFamily: "'Tajawal', sans-serif",
+    fontWeight: '500',
+    transition: 'all 0.2s',
+  },
+  navBtnActive: {
+    background: 'rgba(59, 130, 246, 0.2)',
+    color: '#60a5fa',
+  },
+  main: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  header: {
+    background: '#fff',
+    padding: '20px 32px',
+    borderBottom: '1px solid #e5e7eb',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  userInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  },
+  avatar: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    background: '#3b82f6',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: '700',
+  },
+  content: {
+    flex: 1,
+    padding: '32px',
+  },
+  sectionTitle: {
+    fontSize: '28px',
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: '24px',
+  },
+  statsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+    gap: '24px',
+  },
+  statCard: {
+    background: '#fff',
+    borderRadius: '16px',
+    padding: '24px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  },
+  statIcon: {
+    fontSize: '36px',
+    marginBottom: '12px',
+  },
+  statTitle: {
+    fontSize: '16px',
+    color: '#64748b',
+    marginBottom: '8px',
+  },
+  statNumber: {
+    fontSize: '32px',
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: '16px',
+  },
+  statBreakdown: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    fontSize: '13px',
+    color: '#64748b',
+  },
+  submissionsTable: {
+    background: '#fff',
+    borderRadius: '12px',
+    overflow: 'hidden',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+  },
+  statusBadge: {
+    padding: '6px 12px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: '600',
+  },
+  statusPending: {
+    background: '#fef3c7',
+    color: '#f59e0b',
+  },
+  statusApproved: {
+    background: '#dcfce7',
+    color: '#16a34a',
+  },
+  statusRejected: {
+    background: '#fee2e2',
+    color: '#dc2626',
+  },
+  viewBtn: {
+    padding: '8px 16px',
+    background: '#3b82f6',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontFamily: "'Tajawal', sans-serif",
+  },
+  modal: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0,0,0,0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+  },
+  modalContent: {
+    background: '#fff',
+    borderRadius: '16px',
+    maxWidth: '800px',
+    width: '90%',
+    maxHeight: '90vh',
+    overflow: 'auto',
+  },
+  modalHeader: {
+    padding: '24px',
+    borderBottom: '1px solid #e5e7eb',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  closeBtn: {
+    background: 'none',
+    border: 'none',
+    fontSize: '24px',
+    cursor: 'pointer',
+    color: '#64748b',
+  },
+  modalBody: {
+    padding: '24px',
+  },
+  detailsGrid: {
+    display: 'grid',
+    gap: '12px',
+    marginBottom: '24px',
+  },
+  detailItem: {
+    padding: '12px',
+    background: '#f8fafc',
+    borderRadius: '8px',
+  },
+  filesSection: {
+    marginBottom: '24px',
+  },
+  fileItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '12px',
+    background: '#f8fafc',
+    borderRadius: '8px',
+    marginTop: '8px',
+  },
+  actionsSection: {
+    borderTop: '1px solid #e5e7eb',
+    paddingTop: '24px',
+  },
+  actionButtons: {
+    display: 'flex',
+    gap: '12px',
+    marginTop: '12px',
+    marginBottom: '24px',
+  },
+  actionBtn: {
+    padding: '12px 24px',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '15px',
+    fontFamily: "'Tajawal', sans-serif",
+    fontWeight: '600',
+  },
+  approveBtn: {
+    background: '#22c55e',
+    color: '#fff',
+  },
+  rejectBtn: {
+    background: '#ef4444',
+    color: '#fff',
+  },
+  deleteBtn: {
+    background: '#64748b',
+    color: '#fff',
+  },
+  notesSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  notesInput: {
+    padding: '12px',
+    borderRadius: '8px',
+    border: '1px solid #e5e7eb',
+    fontSize: '14px',
+    fontFamily: "'Tajawal', sans-serif",
+  },
+  saveNotesBtn: {
+    padding: '10px 20px',
+    background: '#3b82f6',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontFamily: "'Tajawal', sans-serif",
+    alignSelf: 'flex-start',
+  },
+  loading: {
+    textAlign: 'center',
+    padding: '40px',
+    fontSize: '18px',
+    color: '#64748b',
+  },
+  emptyState: {
+    textAlign: 'center',
+    padding: '60px',
+    fontSize: '16px',
+    color: '#94a3b8',
+    background: '#fff',
+    borderRadius: '12px',
+  },
+  headerRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '24px',
+  },
+  publishBtn: {
+    padding: '12px 24px',
+    background: '#22c55e',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '15px',
+    fontFamily: "'Tajawal', sans-serif",
+    fontWeight: '600',
+  },
+  tendersGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+    gap: '24px',
+  },
+  tenderCard: {
+    background: '#fff',
+    borderRadius: '12px',
+    padding: '24px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  },
+  tenderHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'start',
+    marginBottom: '12px',
+  },
+  tenderDesc: {
+    color: '#64748b',
+    fontSize: '14px',
+    marginBottom: '16px',
+  },
+  tenderDetails: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    fontSize: '13px',
+    color: '#64748b',
+    marginBottom: '16px',
+  },
+  tenderActions: {
+    display: 'flex',
+    gap: '8px',
+  },
+  deleteTenderBtn: {
+    padding: '8px 16px',
+    background: '#ef4444',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontFamily: "'Tajawal', sans-serif",
+  },
+  tenderForm: {
+    background: '#fff',
+    borderRadius: '12px',
+    padding: '24px',
+    marginBottom: '32px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  },
+  formGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '16px',
+    marginBottom: '24px',
+  },
+  formGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  input: {
+    padding: '12px',
+    borderRadius: '8px',
+    border: '1px solid #e5e7eb',
+    fontSize: '14px',
+    fontFamily: "'Tajawal', sans-serif",
+  },
+  textarea: {
+    padding: '12px',
+    borderRadius: '8px',
+    border: '1px solid #e5e7eb',
+    fontSize: '14px',
+    fontFamily: "'Tajawal', sans-serif",
+    resize: 'vertical',
+  },
+  submitBtn: {
+    padding: '14px 32px',
+    background: '#22c55e',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    fontFamily: "'Tajawal', sans-serif",
+    fontWeight: '600',
+  },
+  overviewContainer: {
+  },
+  // Downloads Log Styles
+  downloadsStatsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: '16px',
+    marginBottom: '24px',
+  },
+  downloadStatCard: {
+    background: '#fff',
+    borderRadius: '12px',
+    padding: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  },
+  downloadStatIcon: {
+    fontSize: '32px',
+  },
+  downloadStatInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  downloadStatNumber: {
+    fontSize: '28px',
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  downloadStatLabel: {
+    fontSize: '13px',
+    color: '#64748b',
+  },
+  tableHeader: {
+    padding: '14px 16px',
+    textAlign: 'right',
+    background: '#f8fafc',
+    color: '#475569',
+    fontWeight: '600',
+    fontSize: '14px',
+    borderBottom: '2px solid #e2e8f0',
+  },
+  tableRow: {
+    borderBottom: '1px solid #f1f5f9',
+    transition: 'background 0.2s',
+  },
+  tableCell: {
+    padding: '14px 16px',
+    fontSize: '14px',
+    color: '#334155',
+  },
+  idBadge: {
+    background: '#dbeafe',
+    color: '#1e40af',
+    padding: '4px 10px',
+    borderRadius: '6px',
+    fontWeight: '600',
+    fontFamily: 'monospace',
+    fontSize: '13px',
+  },
+  ipBadge: {
+    background: '#f1f5f9',
+    color: '#64748b',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    fontFamily: 'monospace',
+    fontSize: '12px',
+  },
+  refreshBtn: {
+    marginTop: '20px',
+    padding: '12px 24px',
+    background: '#3b82f6',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontFamily: "'Tajawal', sans-serif",
+    fontWeight: '600',
+    transition: 'background 0.2s',
+  },
+  // Page Stats Styles
+  pageStatsCard: {
+    background: '#fff',
+    borderRadius: '12px',
+    padding: '20px',
+    marginBottom: '24px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  },
+  pageStatsTitle: {
+    fontSize: '18px',
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: '16px',
+  },
+  pageStatsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  pageStatItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '10px 14px',
+    background: '#f8fafc',
+    borderRadius: '8px',
+  },
+  pageStatName: {
+    fontWeight: '600',
+    color: '#334155',
+  },
+  pageStatCount: {
+    color: '#64748b',
+    fontSize: '14px',
+  },
+  pageBadge: {
+    background: '#e0f2fe',
+    color: '#0369a1',
+    padding: '4px 10px',
+    borderRadius: '6px',
+    fontWeight: '600',
+    fontSize: '13px',
+  }
+};
+
+export default AdminDashboard;
