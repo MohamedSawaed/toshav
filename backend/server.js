@@ -116,11 +116,43 @@ app.post('/api/document-auth', upload.array('documents', 5), async (req, res) =>
     await submission.save();
     console.log(`Document auth request from: ${submission.data.ownerName}`);
 
+    // Send notification to admin
     await sendEmail({
       to: process.env.NOTIFICATION_EMAIL || 'sawaedmohamed.20@gmail.com',
       subject: 'طلب مصادقة مستند جديد',
       html: `<div dir="rtl"><h2>طلب جديد #${submission._id}</h2><p>من: ${submission.data.ownerName}</p></div>`
     });
+
+    // Send confirmation email to user with tracking number
+    if (submission.data.ownerEmail) {
+      await sendEmail({
+        to: submission.data.ownerEmail,
+        subject: 'تأكيد استلام طلبك - اللجنة المحلية حسينية',
+        html: `
+          <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #1e3a5f 0%, #1a365d 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+              <h1 style="color: #fff; margin: 0;">اللجنة المحلية - حسينية</h1>
+            </div>
+            <div style="background: #fff; padding: 30px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 10px 10px;">
+              <h2 style="color: #1a365d;">تم استلام طلبك بنجاح!</h2>
+              <p style="color: #718096; font-size: 16px;">عزيزي/عزيزتي ${submission.data.ownerName}،</p>
+              <p style="color: #718096; font-size: 16px;">نود إعلامك بأنه تم استلام طلب مصادقة المستند الخاص بك وسيتم معالجته خلال 3-5 أيام عمل.</p>
+
+              <div style="background: #f0fff4; border: 2px solid #c6f6d5; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center;">
+                <p style="color: #276749; margin: 0 0 10px; font-size: 14px;">رقم التتبع الخاص بك:</p>
+                <p style="color: #276749; font-size: 20px; font-weight: bold; margin: 0; font-family: monospace; word-break: break-all;">${submission._id}</p>
+              </div>
+
+              <p style="color: #718096; font-size: 14px;">يمكنك استخدام هذا الرقم لتتبع حالة طلبك من خلال صفحة تتبع الطلبات.</p>
+
+              <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+              <p style="color: #a0aec0; font-size: 12px; text-align: center;">هذه رسالة آلية، يرجى عدم الرد عليها</p>
+            </div>
+          </div>
+        `
+      });
+      console.log(`Confirmation email sent to: ${submission.data.ownerEmail}`);
+    }
 
     res.json({ success: true, submissionId: submission._id, message: 'تم إرسال الطلب بنجاح' });
   } catch (error) {
@@ -148,11 +180,43 @@ app.post('/api/official-doc', upload.array('documents', 5), async (req, res) => 
     await submission.save();
     console.log(`Official doc request from: ${submission.data.fullName}`);
 
+    // Send notification to admin
     await sendEmail({
       to: process.env.NOTIFICATION_EMAIL || 'sawaedmohamed.20@gmail.com',
       subject: 'طلب إعداد مستند رسمي جديد',
       html: `<div dir="rtl"><h2>طلب جديد #${submission._id}</h2><p>من: ${submission.data.fullName}</p></div>`
     });
+
+    // Send confirmation email to user with tracking number
+    if (submission.data.email) {
+      await sendEmail({
+        to: submission.data.email,
+        subject: 'تأكيد استلام طلبك - اللجنة المحلية حسينية',
+        html: `
+          <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #1e3a5f 0%, #1a365d 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+              <h1 style="color: #fff; margin: 0;">اللجنة المحلية - حسينية</h1>
+            </div>
+            <div style="background: #fff; padding: 30px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 10px 10px;">
+              <h2 style="color: #1a365d;">تم استلام طلبك بنجاح!</h2>
+              <p style="color: #718096; font-size: 16px;">عزيزي/عزيزتي ${submission.data.fullName}،</p>
+              <p style="color: #718096; font-size: 16px;">نود إعلامك بأنه تم استلام طلب إعداد المستند الرسمي الخاص بك وسيتم معالجته خلال 3-5 أيام عمل.</p>
+
+              <div style="background: #f0fff4; border: 2px solid #c6f6d5; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center;">
+                <p style="color: #276749; margin: 0 0 10px; font-size: 14px;">رقم التتبع الخاص بك:</p>
+                <p style="color: #276749; font-size: 20px; font-weight: bold; margin: 0; font-family: monospace; word-break: break-all;">${submission._id}</p>
+              </div>
+
+              <p style="color: #718096; font-size: 14px;">يمكنك استخدام هذا الرقم لتتبع حالة طلبك من خلال صفحة تتبع الطلبات.</p>
+
+              <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+              <p style="color: #a0aec0; font-size: 12px; text-align: center;">هذه رسالة آلية، يرجى عدم الرد عليها</p>
+            </div>
+          </div>
+        `
+      });
+      console.log(`Confirmation email sent to: ${submission.data.email}`);
+    }
 
     res.json({ success: true, submissionId: submission._id, message: 'تم إرسال الطلب بنجاح' });
   } catch (error) {

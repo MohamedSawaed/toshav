@@ -18,6 +18,7 @@ const OfficialDocumentRequest = () => {
   const [dragActive, setDragActive] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submissionId, setSubmissionId] = useState('');
 
   const documentTypes = [
     { id: 'residency', label: 'شهادة إقامة', labelHe: 'אישור תושבות', icon: '🏠' },
@@ -95,7 +96,7 @@ const OfficialDocumentRequest = () => {
     switch (currentStep) {
       case 1: return formData.documentType !== '';
       case 2: return formData.recipientEntity !== '' && formData.documentPurpose !== '';
-      case 3: return formData.fullName && formData.idNumber && formData.address && formData.phone;
+      case 3: return formData.fullName && formData.idNumber && formData.address && formData.phone && formData.email;
       case 4: return formData.subjectDescription.length >= 10;
       default: return true;
     }
@@ -133,6 +134,7 @@ const OfficialDocumentRequest = () => {
       const result = await response.json();
 
       if (result.success) {
+        setSubmissionId(result.submissionId);
         setIsSubmitted(true);
       } else {
         alert('حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.');
@@ -160,6 +162,7 @@ const OfficialDocumentRequest = () => {
     });
     setCurrentStep(1);
     setIsSubmitted(false);
+    setSubmissionId('');
   };
 
   const getSelectedLabel = (items, id) => {
@@ -342,8 +345,12 @@ const OfficialDocumentRequest = () => {
               
               <div style={styles.referenceCard}>
                 <span style={styles.refLabel}>رقم الطلب</span>
-                <span style={styles.refValue}>DOC-{Date.now().toString().slice(-8)}</span>
+                <span style={styles.refValue}>{submissionId}</span>
               </div>
+
+              <p style={styles.emailSentNote}>
+                تم إرسال رقم التتبع إلى بريدك الإلكتروني
+              </p>
 
               <div style={styles.summaryCard}>
                 <h3 style={styles.summaryTitle}>ملخص الطلب</h3>
@@ -530,7 +537,7 @@ const OfficialDocumentRequest = () => {
                     <div style={styles.formGroup}>
                       <label style={styles.label}>
                         <span style={styles.labelIcon}>📧</span>
-                        البريد الإلكتروني
+                        البريد الإلكتروني *
                       </label>
                       <input
                         type="email"
@@ -1362,11 +1369,18 @@ const styles = {
     marginBottom: '6px',
   },
   refValue: {
-    fontSize: '24px',
+    fontSize: '18px',
     fontWeight: '800',
     color: '#276749',
     fontFamily: 'monospace',
-    letterSpacing: '2px',
+    letterSpacing: '1px',
+    wordBreak: 'break-all',
+  },
+  emailSentNote: {
+    fontSize: '14px',
+    color: '#48bb78',
+    marginBottom: '24px',
+    lineHeight: 1.6,
   },
   summaryCard: {
     padding: '24px',

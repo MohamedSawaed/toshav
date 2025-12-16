@@ -15,6 +15,7 @@ const DocumentAuthenticationRequest = () => {
   const [dragActive, setDragActive] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submissionId, setSubmissionId] = useState('');
 
   const documentTypes = [
     { id: 'certificate', labelAr: 'شهادة', labelHe: 'תעודה', icon: '📜' },
@@ -64,7 +65,7 @@ const DocumentAuthenticationRequest = () => {
     switch (currentStep) {
       case 1: return formData.documentFile !== null;
       case 2: return formData.documentType !== '';
-      case 3: return formData.ownerName && formData.ownerId && formData.ownerPhone;
+      case 3: return formData.ownerName && formData.ownerId && formData.ownerPhone && formData.ownerEmail;
       default: return true;
     }
   };
@@ -88,6 +89,7 @@ const DocumentAuthenticationRequest = () => {
       const result = await response.json();
 
       if (result.success) {
+        setSubmissionId(result.submissionId);
         setIsSubmitted(true);
       } else {
         alert('حدث خطأ أثناء إرسال الطلب');
@@ -112,6 +114,7 @@ const DocumentAuthenticationRequest = () => {
     });
     setCurrentStep(1);
     setIsSubmitted(false);
+    setSubmissionId('');
   };
 
   return (
@@ -269,8 +272,14 @@ const DocumentAuthenticationRequest = () => {
 
               <div style={styles.referenceCard}>
                 <span style={styles.refLabel}>رقم الطلب | מספר בקשה</span>
-                <span style={styles.refValue}>DOC-{Date.now().toString().slice(-8)}</span>
+                <span style={styles.refValue}>{submissionId}</span>
               </div>
+
+              <p style={styles.emailSentNote}>
+                تم إرسال رقم التتبع إلى بريدك الإلكتروني
+                <br />
+                מספר המעקב נשלח לדוא"ל שלך
+              </p>
 
               <button
                 onClick={resetForm}
@@ -437,7 +446,7 @@ const DocumentAuthenticationRequest = () => {
                     <div style={styles.formGroup}>
                       <label style={styles.label}>
                         <span style={styles.labelIcon}>📧</span>
-                        البريد الإلكتروني | דוא"ל
+                        البريد الإلكتروني * | דוא"ל
                       </label>
                       <input
                         type="email"
@@ -1104,11 +1113,18 @@ const styles = {
     marginBottom: '6px',
   },
   refValue: {
-    fontSize: '24px',
+    fontSize: '18px',
     fontWeight: '800',
     color: '#276749',
     fontFamily: 'monospace',
-    letterSpacing: '2px',
+    letterSpacing: '1px',
+    wordBreak: 'break-all',
+  },
+  emailSentNote: {
+    fontSize: '14px',
+    color: '#48bb78',
+    marginBottom: '24px',
+    lineHeight: 1.6,
   },
   newRequestBtn: {
     display: 'inline-flex',
