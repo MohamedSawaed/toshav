@@ -356,6 +356,35 @@ function App() {
           </div>
         </main>
 
+        {/* Mobile Admin Access Button - Only visible on small screens */}
+        <div
+          onClick={() => setShowAdminPrompt(true)}
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            left: '20px',
+            width: '44px',
+            height: '44px',
+            background: 'rgba(26, 54, 93, 0.1)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 1000,
+            transition: 'all 0.3s ease',
+            border: '1px solid rgba(26, 54, 93, 0.2)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(26, 54, 93, 0.2)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(26, 54, 93, 0.1)';
+          }}
+        >
+          <span style={{ fontSize: '20px', opacity: 0.6 }}>⚙</span>
+        </div>
+
         {/* Footer */}
         <footer style={{
           background: '#1a365d',
