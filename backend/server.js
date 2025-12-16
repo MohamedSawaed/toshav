@@ -110,14 +110,14 @@ app.post('/api/document-auth', upload.array('documents', 5), async (req, res) =>
         path: f.path
       })) || [],
       status: 'pending',
-      emailSentTo: 'husniua.committe@gmail.com'
+      emailSentTo: process.env.NOTIFICATION_EMAIL || 'sawaedmohamed.20@gmail.com'
     });
 
     await submission.save();
     console.log(`Document auth request from: ${submission.data.ownerName}`);
 
     await sendEmail({
-      to: 'husniua.committe@gmail.com',
+      to: process.env.NOTIFICATION_EMAIL || 'sawaedmohamed.20@gmail.com',
       subject: 'طلب مصادقة مستند جديد',
       html: `<div dir="rtl"><h2>طلب جديد #${submission._id}</h2><p>من: ${submission.data.ownerName}</p></div>`
     });
@@ -142,14 +142,14 @@ app.post('/api/official-doc', upload.array('documents', 5), async (req, res) => 
         path: f.path
       })) || [],
       status: 'pending',
-      emailSentTo: 'husniua.committe@gmail.com'
+      emailSentTo: process.env.NOTIFICATION_EMAIL || 'sawaedmohamed.20@gmail.com'
     });
 
     await submission.save();
     console.log(`Official doc request from: ${submission.data.fullName}`);
 
     await sendEmail({
-      to: 'husniua.committe@gmail.com',
+      to: process.env.NOTIFICATION_EMAIL || 'sawaedmohamed.20@gmail.com',
       subject: 'طلب إعداد مستند رسمي جديد',
       html: `<div dir="rtl"><h2>طلب جديد #${submission._id}</h2><p>من: ${submission.data.fullName}</p></div>`
     });
