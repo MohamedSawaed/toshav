@@ -68,7 +68,13 @@ async function sendEmail({ to, subject, html, attachments = [] }) {
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://toshav.vercel.app', process.env.FRONTEND_URL].filter(Boolean),
+  origin: [
+    'http://localhost:3000',
+    'https://toshav.vercel.app',
+    'https://toshav-4an0bb0fe-mohamed-sawaeds-projects.vercel.app',
+    /\.vercel\.app$/,
+    process.env.FRONTEND_URL
+  ].filter(Boolean),
   credentials: true
 }));
 app.use(express.json());
