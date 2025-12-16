@@ -5,7 +5,7 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const fs = require('fs');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const { connectDB, Submission, Tender, DownloadLog, VisitLog } = require('./db');
 
 const app = express();
@@ -14,49 +14,39 @@ const PORT = process.env.PORT || 3001;
 // Connect to MongoDB
 connectDB();
 
-// Configure email transporter
-let transporter = null;
+// Configure Resend email
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
-async function sendEmail({ to, subject, html, attachments = [] }) {
+async function sendEmail({ to, subject, html }) {
   try {
     console.log('\n===== EMAIL NOTIFICATION =====');
     console.log('To:', to);
     console.log('Subject:', subject);
     console.log('================================\n');
 
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+    if (resend) {
       try {
-        if (!transporter) {
-          transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-              user: process.env.EMAIL_USER,
-              pass: process.env.EMAIL_PASSWORD
-            },
-            connectionTimeout: 30000,
-            greetingTimeout: 30000,
-            socketTimeout: 30000
-          });
-        }
-
-        const sendPromise = transporter.sendMail({
-          from: `"اللجنة المحلية - الحسينية" <${process.env.EMAIL_USER}>`,
-          to, subject, html, attachments
+        const { data, error } = await resend.emails.send({
+          from: 'Husniyya Municipality <onboarding@resend.dev>',
+          to: [to],
+          subject: subject,
+          html: html
         });
 
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Email timeout')), 15000)
-        );
+        if (error) {
+          console.log('Email failed:', error.message);
+          return { success: true, messageId: 'logged', logged: true };
+        }
 
-        const info = await Promise.race([sendPromise, timeoutPromise]);
-        console.log('Email sent:', info.messageId);
-        return { success: true, messageId: info.messageId };
+        console.log('Email sent:', data.id);
+        return { success: true, messageId: data.id };
       } catch (emailError) {
         console.log('Email failed:', emailError.message);
         return { success: true, messageId: 'logged', logged: true };
       }
     }
 
+    console.log('No email service configured - notification logged only');
     return { success: true, messageId: 'logged', logged: true };
   } catch (error) {
     console.error('Email error:', error.message);
