@@ -28,16 +28,14 @@ async function sendEmail({ to, subject, html, attachments = [] }) {
       try {
         if (!transporter) {
           transporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
+            service: 'gmail',
             auth: {
               user: process.env.EMAIL_USER,
               pass: process.env.EMAIL_PASSWORD
             },
-            tls: { rejectUnauthorized: false },
-            connectionTimeout: 10000,
-            greetingTimeout: 10000
+            connectionTimeout: 30000,
+            greetingTimeout: 30000,
+            socketTimeout: 30000
           });
         }
 
