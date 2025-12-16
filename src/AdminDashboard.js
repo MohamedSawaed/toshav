@@ -15,6 +15,20 @@ const AdminDashboard = () => {
   const [downloadsStats, setDownloadsStats] = useState(null);
   const [visitsLog, setVisitsLog] = useState([]);
   const [visitsStats, setVisitsStats] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Handle window resize for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      if (window.innerWidth > 768) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const headers = {
     'Authorization': `Bearer ${ADMIN_TOKEN}`,
@@ -610,8 +624,24 @@ const AdminDashboard = () => {
     );
   };
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setMobileMenuOpen(false);
+  };
+
+  const navItems = [
+    { id: 'overview', icon: '📊', label: 'نظرة عامة' },
+    { id: 'documentAuth', icon: '📄', label: 'طلبات المصادقة' },
+    { id: 'officialDoc', icon: '📋', label: 'طلبات المستندات' },
+    { id: 'tenders', icon: '🏗️', label: 'عروض المناقصات' },
+    { id: 'certificates', icon: '🔍', label: 'طلبات الشهادات' },
+    { id: 'downloads', icon: '📥', label: 'سجل التنزيلات' },
+    { id: 'visits', icon: '👁️', label: 'سجل الزيارات' },
+    { id: 'publish-tender', icon: '📢', label: 'نشر مناقصة' },
+  ];
+
   return (
-    <div style={styles.container}>
+    <div style={{...styles.container, ...(isMobile && styles.containerMobile)}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700&display=swap');
 
@@ -620,76 +650,92 @@ const AdminDashboard = () => {
           padding: 0;
           box-sizing: border-box;
         }
+
+        @media (max-width: 768px) {
+          .admin-table {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+          }
+        }
       `}</style>
 
-      <div style={styles.sidebar}>
-        <div style={styles.logo}>
-          <span style={styles.logoIcon}>⚙️</span>
-          <h2>لوحة التحكم</h2>
+      {/* Mobile Header */}
+      {isMobile && (
+        <div style={styles.mobileHeader}>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            style={styles.hamburgerBtn}
+          >
+            {mobileMenuOpen ? '✕' : '☰'}
+          </button>
+          <h1 style={styles.mobileTitle}>لوحة التحكم</h1>
+          <div style={styles.mobileAvatar}>A</div>
         </div>
+      )}
 
-        <nav style={styles.nav}>
-          <button
-            onClick={() => setActiveTab('overview')}
-            style={{ ...styles.navBtn, ...(activeTab === 'overview' && styles.navBtnActive) }}
-          >
-            📊 نظرة عامة
-          </button>
-          <button
-            onClick={() => setActiveTab('documentAuth')}
-            style={{ ...styles.navBtn, ...(activeTab === 'documentAuth' && styles.navBtnActive) }}
-          >
-            📄 طلبات المصادقة
-          </button>
-          <button
-            onClick={() => setActiveTab('officialDoc')}
-            style={{ ...styles.navBtn, ...(activeTab === 'officialDoc' && styles.navBtnActive) }}
-          >
-            📋 طلبات المستندات
-          </button>
-          <button
-            onClick={() => setActiveTab('tenders')}
-            style={{ ...styles.navBtn, ...(activeTab === 'tenders' && styles.navBtnActive) }}
-          >
-            🏗️ عروض المناقصات
-          </button>
-          <button
-            onClick={() => setActiveTab('certificates')}
-            style={{ ...styles.navBtn, ...(activeTab === 'certificates' && styles.navBtnActive) }}
-          >
-            🔍 طلبات الشهادات
-          </button>
-          <button
-            onClick={() => setActiveTab('downloads')}
-            style={{ ...styles.navBtn, ...(activeTab === 'downloads' && styles.navBtnActive) }}
-          >
-            📥 سجل التنزيلات
-          </button>
-          <button
-            onClick={() => setActiveTab('visits')}
-            style={{ ...styles.navBtn, ...(activeTab === 'visits' && styles.navBtnActive) }}
-          >
-            👁️ سجل الزيارات
-          </button>
-          <button
-            onClick={() => setActiveTab('publish-tender')}
-            style={{ ...styles.navBtn, ...(activeTab === 'publish-tender' && styles.navBtnActive) }}
-          >
-            📢 نشر مناقصة
-          </button>
-        </nav>
-      </div>
-
-      <div style={styles.main}>
-        <div style={styles.header}>
-          <h1>اللجنة المحلية - الحسينية</h1>
-          <div style={styles.userInfo}>
-            <span>مسؤول</span>
-            <div style={styles.avatar}>A</div>
+      {/* Mobile Navigation Overlay */}
+      {isMobile && mobileMenuOpen && (
+        <div style={styles.mobileOverlay} onClick={() => setMobileMenuOpen(false)}>
+          <div style={styles.mobileMenu} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.mobileMenuHeader}>
+              <span style={styles.logoIcon}>⚙️</span>
+              <h2 style={styles.mobileMenuTitle}>القائمة</h2>
+            </div>
+            <nav style={styles.mobileNav}>
+              {navItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => handleTabChange(item.id)}
+                  style={{
+                    ...styles.mobileNavBtn,
+                    ...(activeTab === item.id && styles.mobileNavBtnActive)
+                  }}
+                >
+                  <span style={styles.navIcon}>{item.icon}</span>
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </nav>
           </div>
         </div>
+      )}
 
-        <div style={styles.content}>
+      {/* Desktop Sidebar */}
+      {!isMobile && (
+        <div style={styles.sidebar}>
+          <div style={styles.logo}>
+            <span style={styles.logoIcon}>⚙️</span>
+            <h2>لوحة التحكم</h2>
+          </div>
+
+          <nav style={styles.nav}>
+            {navItems.map(item => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                style={{ ...styles.navBtn, ...(activeTab === item.id && styles.navBtnActive) }}
+              >
+                {item.icon} {item.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+      )}
+
+      <div style={{...styles.main, ...(isMobile && styles.mainMobile)}}>
+        {/* Desktop Header */}
+        {!isMobile && (
+          <div style={styles.header}>
+            <h1>اللجنة المحلية - الحسينية</h1>
+            <div style={styles.userInfo}>
+              <span>مسؤول</span>
+              <div style={styles.avatar}>A</div>
+            </div>
+          </div>
+        )}
+
+        <div style={{...styles.content, ...(isMobile && styles.contentMobile)}}>
           {activeTab === 'overview' && renderOverview()}
           {['documentAuth', 'officialDoc', 'tenders', 'certificates'].includes(activeTab) && renderSubmissionsList()}
           {activeTab === 'downloads' && renderDownloadsLog()}
@@ -936,46 +982,48 @@ const styles = {
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: '24px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+    gap: '16px',
   },
   statCard: {
     background: '#fff',
     borderRadius: '16px',
-    padding: '24px',
+    padding: '16px',
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
   },
   statIcon: {
-    fontSize: '36px',
-    marginBottom: '12px',
-  },
-  statTitle: {
-    fontSize: '16px',
-    color: '#64748b',
+    fontSize: '28px',
     marginBottom: '8px',
   },
+  statTitle: {
+    fontSize: '14px',
+    color: '#64748b',
+    marginBottom: '6px',
+  },
   statNumber: {
-    fontSize: '32px',
+    fontSize: '24px',
     fontWeight: '700',
     color: '#1e293b',
-    marginBottom: '16px',
+    marginBottom: '12px',
   },
   statBreakdown: {
     display: 'flex',
     flexDirection: 'column',
     gap: '4px',
-    fontSize: '13px',
+    fontSize: '12px',
     color: '#64748b',
   },
   submissionsTable: {
     background: '#fff',
     borderRadius: '12px',
-    overflow: 'hidden',
+    overflow: 'auto',
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    WebkitOverflowScrolling: 'touch',
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse',
+    minWidth: '500px',
   },
   statusBadge: {
     padding: '6px 12px',
@@ -1018,12 +1066,13 @@ const styles = {
     background: '#fff',
     borderRadius: '16px',
     maxWidth: '800px',
-    width: '90%',
+    width: '95%',
     maxHeight: '90vh',
     overflow: 'auto',
+    margin: '20px',
   },
   modalHeader: {
-    padding: '24px',
+    padding: '16px',
     borderBottom: '1px solid #e5e7eb',
     display: 'flex',
     justifyContent: 'space-between',
@@ -1037,7 +1086,7 @@ const styles = {
     color: '#64748b',
   },
   modalBody: {
-    padding: '24px',
+    padding: '16px',
   },
   detailsGrid: {
     display: 'grid',
@@ -1066,18 +1115,21 @@ const styles = {
   },
   actionButtons: {
     display: 'flex',
-    gap: '12px',
+    flexWrap: 'wrap',
+    gap: '10px',
     marginTop: '12px',
     marginBottom: '24px',
   },
   actionBtn: {
-    padding: '12px 24px',
+    padding: '10px 18px',
     border: 'none',
     borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '15px',
+    fontSize: '14px',
     fontFamily: "'Tajawal', sans-serif",
     fontWeight: '600',
+    flex: '1 1 auto',
+    minWidth: '80px',
   },
   approveBtn: {
     background: '#22c55e',
@@ -1147,8 +1199,8 @@ const styles = {
   },
   tendersGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-    gap: '24px',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+    gap: '16px',
   },
   tenderCard: {
     background: '#fff',
@@ -1198,7 +1250,7 @@ const styles = {
   },
   formGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(2, 1fr)',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
     gap: '16px',
     marginBottom: '24px',
   },
@@ -1238,33 +1290,33 @@ const styles = {
   // Downloads Log Styles
   downloadsStatsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
-    gap: '16px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+    gap: '12px',
     marginBottom: '24px',
   },
   downloadStatCard: {
     background: '#fff',
     borderRadius: '12px',
-    padding: '20px',
+    padding: '14px',
     display: 'flex',
     alignItems: 'center',
-    gap: '16px',
+    gap: '12px',
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
   },
   downloadStatIcon: {
-    fontSize: '32px',
+    fontSize: '24px',
   },
   downloadStatInfo: {
     display: 'flex',
     flexDirection: 'column',
   },
   downloadStatNumber: {
-    fontSize: '28px',
+    fontSize: '22px',
     fontWeight: '700',
     color: '#1e293b',
   },
   downloadStatLabel: {
-    fontSize: '13px',
+    fontSize: '11px',
     color: '#64748b',
   },
   tableHeader: {
@@ -1357,7 +1409,124 @@ const styles = {
     borderRadius: '6px',
     fontWeight: '600',
     fontSize: '13px',
-  }
+  },
+  // Mobile Styles
+  containerMobile: {
+    flexDirection: 'column',
+  },
+  mobileHeader: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '60px',
+    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 16px',
+    zIndex: 1000,
+    boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+  },
+  hamburgerBtn: {
+    width: '44px',
+    height: '44px',
+    background: 'rgba(255,255,255,0.1)',
+    border: 'none',
+    borderRadius: '10px',
+    color: '#fff',
+    fontSize: '24px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mobileTitle: {
+    color: '#fff',
+    fontSize: '18px',
+    fontWeight: '700',
+    margin: 0,
+  },
+  mobileAvatar: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    background: '#3b82f6',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: '700',
+    fontSize: '16px',
+  },
+  mobileOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0,0,0,0.5)',
+    zIndex: 2000,
+    display: 'flex',
+  },
+  mobileMenu: {
+    width: '280px',
+    maxWidth: '85%',
+    height: '100%',
+    background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
+    padding: '20px',
+    overflowY: 'auto',
+    animation: 'slideIn 0.3s ease',
+  },
+  mobileMenuHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginBottom: '30px',
+    paddingBottom: '20px',
+    borderBottom: '1px solid rgba(255,255,255,0.1)',
+  },
+  mobileMenuTitle: {
+    color: '#fff',
+    fontSize: '20px',
+    fontWeight: '700',
+    margin: 0,
+  },
+  mobileNav: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  mobileNavBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+    padding: '16px',
+    background: 'transparent',
+    border: 'none',
+    borderRadius: '12px',
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: '16px',
+    fontFamily: "'Tajawal', sans-serif",
+    fontWeight: '500',
+    cursor: 'pointer',
+    textAlign: 'right',
+    transition: 'all 0.2s',
+  },
+  mobileNavBtnActive: {
+    background: 'rgba(59, 130, 246, 0.2)',
+    color: '#60a5fa',
+  },
+  navIcon: {
+    fontSize: '22px',
+  },
+  mainMobile: {
+    marginTop: '60px',
+    width: '100%',
+  },
+  contentMobile: {
+    padding: '16px',
+  },
 };
 
 export default AdminDashboard;
