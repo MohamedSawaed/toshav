@@ -18,6 +18,7 @@ const AdminDashboard = () => {
   const [visitsStats, setVisitsStats] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   // Handle window resize for responsive design
   useEffect(() => {
@@ -164,6 +165,64 @@ const AdminDashboard = () => {
       fetchStats();
     } catch (error) {
       console.error('Error deleting submission:', error);
+    }
+  };
+
+  const uploadResponseFile = async (id, file) => {
+    if (!file) return;
+
+    setUploadingFile(true);
+    try {
+      const formData = new FormData();
+      formData.append('responseFile', file);
+
+      const response = await fetch(`${API_URL}/admin/submission/${id}/upload-response`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${ADMIN_TOKEN}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setSelectedSubmission({ ...selectedSubmission, adminResponseFile: data.file });
+        fetchSubmissions(activeTab);
+        alert('تم رفع الملف بنجاح');
+      } else {
+        alert('فشل في رفع الملف');
+      }
+    } catch (error) {
+      console.error('Error uploading response file:', error);
+      alert('حدث خطأ أثناء رفع الملف');
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const deleteResponseFile = async (id) => {
+    if (!window.confirm('هل أنت متأكد من حذف ملف الرد؟')) return;
+
+    setUploadingFile(true);
+    try {
+      const response = await fetch(`${API_URL}/admin/submission/${id}/response-file`, {
+        method: 'DELETE',
+        headers
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setSelectedSubmission({ ...selectedSubmission, adminResponseFile: null });
+        fetchSubmissions(activeTab);
+        alert('تم حذف الملف بنجاح');
+      } else {
+        alert('فشل في حذف الملف');
+      }
+    } catch (error) {
+      console.error('Error deleting response file:', error);
+      alert('حدث خطأ أثناء حذف الملف');
+    } finally {
+      setUploadingFile(false);
     }
   };
 
@@ -332,6 +391,59 @@ const AdminDashboard = () => {
                 ))}
               </div>
             )}
+
+            {/* Admin Response File Section */}
+            <div style={styles.responseFileSection}>
+              <h4 style={styles.responseFileTitle}>📁 ملف الرد للمستخدم:</h4>
+
+              {selectedSubmission.adminResponseFile ? (
+                <div style={styles.responseFileItem}>
+                  <div style={styles.responseFileInfo}>
+                    <span style={styles.responseFileIcon}>📄</span>
+                    <div>
+                      <span style={styles.responseFileName}>{selectedSubmission.adminResponseFile.originalname}</span>
+                      <span style={styles.responseFileSize}>
+                        ({(selectedSubmission.adminResponseFile.size / 1024).toFixed(1)} KB)
+                      </span>
+                    </div>
+                  </div>
+                  <div style={styles.responseFileActions}>
+                    <a
+                      href={`${API_URL.replace('/api', '')}/${selectedSubmission.adminResponseFile.path}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={styles.downloadResponseBtn}
+                    >
+                      تحميل
+                    </a>
+                    <button
+                      onClick={() => deleteResponseFile(selectedSubmission.id)}
+                      disabled={uploadingFile}
+                      style={styles.deleteResponseBtn}
+                    >
+                      حذف
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={styles.uploadSection}>
+                  <p style={styles.uploadHint}>لم يتم رفع ملف رد بعد. ارفع ملفاً ليتمكن المستخدم من تحميله عند تتبع طلبه.</p>
+                  <input
+                    type="file"
+                    id="responseFileInput"
+                    onChange={(e) => {
+                      if (e.target.files[0]) {
+                        uploadResponseFile(selectedSubmission.id, e.target.files[0]);
+                      }
+                    }}
+                    style={{ display: 'none' }}
+                  />
+                  <label htmlFor="responseFileInput" style={styles.uploadBtn}>
+                    {uploadingFile ? 'جاري الرفع...' : '📤 رفع ملف'}
+                  </label>
+                </div>
+              )}
+            </div>
 
             <div style={styles.actionsSection}>
               <h4>تحديث الحالة:</h4>
@@ -1109,6 +1221,95 @@ const styles = {
     background: '#f8fafc',
     borderRadius: '8px',
     marginTop: '8px',
+  },
+  responseFileSection: {
+    marginBottom: '24px',
+    padding: '20px',
+    background: '#f0fdf4',
+    borderRadius: '12px',
+    border: '2px solid #bbf7d0',
+  },
+  responseFileTitle: {
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#166534',
+    margin: '0 0 16px 0',
+  },
+  responseFileItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '14px',
+    background: '#fff',
+    borderRadius: '8px',
+    border: '1px solid #86efac',
+  },
+  responseFileInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  },
+  responseFileIcon: {
+    fontSize: '28px',
+  },
+  responseFileName: {
+    display: 'block',
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#166534',
+  },
+  responseFileSize: {
+    fontSize: '12px',
+    color: '#64748b',
+  },
+  responseFileActions: {
+    display: 'flex',
+    gap: '8px',
+  },
+  downloadResponseBtn: {
+    padding: '8px 16px',
+    background: '#22c55e',
+    color: '#fff',
+    borderRadius: '6px',
+    textDecoration: 'none',
+    fontSize: '13px',
+    fontFamily: "'Tajawal', sans-serif",
+    fontWeight: '600',
+  },
+  deleteResponseBtn: {
+    padding: '8px 16px',
+    background: '#ef4444',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontFamily: "'Tajawal', sans-serif",
+    fontWeight: '600',
+  },
+  uploadSection: {
+    textAlign: 'center',
+    padding: '20px',
+    background: '#fff',
+    borderRadius: '8px',
+    border: '2px dashed #86efac',
+  },
+  uploadHint: {
+    fontSize: '14px',
+    color: '#64748b',
+    marginBottom: '16px',
+  },
+  uploadBtn: {
+    display: 'inline-block',
+    padding: '12px 24px',
+    background: '#22c55e',
+    color: '#fff',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontFamily: "'Tajawal', sans-serif",
+    fontWeight: '600',
+    transition: 'background 0.2s',
   },
   actionsSection: {
     borderTop: '1px solid #e5e7eb',

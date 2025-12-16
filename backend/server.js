@@ -289,7 +289,8 @@ app.get('/api/track/:referenceNumber', async (req, res) => {
           status: submission.status,
           submittedAt: submission.submittedAt,
           notes: submission.notes || null,
-          data: { fullName: submission.data?.fullName || submission.data?.ownerName || null }
+          data: { fullName: submission.data?.fullName || submission.data?.ownerName || null },
+          adminResponseFile: submission.adminResponseFile || null
         }
       });
     } else {
@@ -347,6 +348,73 @@ app.patch('/api/admin/submission/:id', adminAuth, async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ error: 'Failed to update' });
+  }
+});
+
+// ===== ADMIN: UPLOAD RESPONSE FILE =====
+app.post('/api/admin/submission/:id/upload-response', adminAuth, upload.single('responseFile'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const submission = await Submission.findByIdAndUpdate(
+      id,
+      {
+        adminResponseFile: {
+          filename: req.file.filename,
+          originalname: req.file.originalname,
+          size: req.file.size,
+          path: req.file.path,
+          uploadedAt: new Date()
+        },
+        updatedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (submission) {
+      console.log(`Admin response file uploaded for submission ${id}: ${req.file.originalname}`);
+      res.json({ success: true, submission, file: submission.adminResponseFile });
+    } else {
+      // Delete the uploaded file if submission not found
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      res.status(404).json({ error: 'Submission not found' });
+    }
+  } catch (error) {
+    console.error('Error uploading response file:', error);
+    res.status(500).json({ error: 'Failed to upload response file' });
+  }
+});
+
+// ===== ADMIN: DELETE RESPONSE FILE =====
+app.delete('/api/admin/submission/:id/response-file', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const submission = await Submission.findById(id);
+
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    // Delete the file from disk
+    if (submission.adminResponseFile && submission.adminResponseFile.path) {
+      if (fs.existsSync(submission.adminResponseFile.path)) {
+        fs.unlinkSync(submission.adminResponseFile.path);
+      }
+    }
+
+    // Remove from database
+    submission.adminResponseFile = undefined;
+    submission.updatedAt = new Date();
+    await submission.save();
+
+    res.json({ success: true, message: 'Response file deleted' });
+  } catch (error) {
+    console.error('Error deleting response file:', error);
+    res.status(500).json({ error: 'Failed to delete response file' });
   }
 });
 

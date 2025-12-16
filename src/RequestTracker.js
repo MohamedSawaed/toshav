@@ -315,6 +315,32 @@ const RequestTracker = () => {
                     <p style={styles.notesText}>{requestData.notes}</p>
                   </div>
                 )}
+
+                {/* Admin Response File Download */}
+                {requestData.adminResponseFile && (
+                  <div style={styles.downloadFileBox}>
+                    <div style={styles.downloadFileHeader}>
+                      <span style={styles.downloadFileIcon}>📥</span>
+                      <h5 style={styles.downloadFileTitle}>ملف متاح للتحميل</h5>
+                    </div>
+                    <div style={styles.downloadFileContent}>
+                      <div style={styles.downloadFileInfo}>
+                        <span style={styles.downloadFileName}>{requestData.adminResponseFile.originalname}</span>
+                        <span style={styles.downloadFileSize}>
+                          ({(requestData.adminResponseFile.size / 1024).toFixed(1)} KB)
+                        </span>
+                      </div>
+                      <a
+                        href={`${API_URL}/${requestData.adminResponseFile.path}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={styles.downloadFileBtn}
+                      >
+                        تحميل الملف
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Contact Info */}
@@ -617,6 +643,66 @@ const styles = {
     color: '#78350f',
     margin: 0,
     lineHeight: 1.6,
+  },
+  downloadFileBox: {
+    marginTop: '20px',
+    padding: '20px',
+    background: '#ecfdf5',
+    borderRadius: '12px',
+    border: '2px solid #a7f3d0',
+  },
+  downloadFileHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: '16px',
+  },
+  downloadFileIcon: {
+    fontSize: '28px',
+  },
+  downloadFileTitle: {
+    fontSize: '16px',
+    fontWeight: '700',
+    color: '#065f46',
+    margin: 0,
+  },
+  downloadFileContent: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '16px',
+    background: '#fff',
+    borderRadius: '10px',
+    border: '1px solid #6ee7b7',
+  },
+  downloadFileInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+  downloadFileName: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#065f46',
+  },
+  downloadFileSize: {
+    fontSize: '12px',
+    color: '#64748b',
+  },
+  downloadFileBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 24px',
+    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+    color: '#fff',
+    borderRadius: '10px',
+    textDecoration: 'none',
+    fontSize: '15px',
+    fontWeight: '600',
+    fontFamily: '"Tajawal", sans-serif',
+    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+    transition: 'all 0.3s ease',
   },
   contactBox: {
     display: 'flex',

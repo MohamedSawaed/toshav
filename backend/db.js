@@ -20,6 +20,13 @@ const submissionSchema = new mongoose.Schema({
     size: Number,
     path: String
   }],
+  adminResponseFile: {
+    filename: String,
+    originalname: String,
+    size: Number,
+    path: String,
+    uploadedAt: Date
+  },
   status: { type: String, default: 'pending', enum: ['pending', 'approved', 'rejected', 'completed'] },
   notes: { type: String, default: '' },
   emailSentTo: String,
