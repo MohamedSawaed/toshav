@@ -2,23 +2,36 @@ import React, { useState } from 'react';
 import API_URL from './config';
 
 const RequestTracker = () => {
+  const [searchType, setSearchType] = useState('reference'); // 'reference' or 'idNumber'
   const [referenceNumber, setReferenceNumber] = useState('');
+  const [idNumber, setIdNumber] = useState('');
   const [requestData, setRequestData] = useState(null);
+  const [multipleRequests, setMultipleRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSearch = async () => {
-    if (!referenceNumber.trim()) {
+    if (searchType === 'reference' && !referenceNumber.trim()) {
       setError('الرجاء إدخال رقم المرجع');
+      return;
+    }
+    if (searchType === 'idNumber' && !idNumber.trim()) {
+      setError('الرجاء إدخال رقم الهوية');
       return;
     }
 
     setLoading(true);
     setError('');
     setRequestData(null);
+    setMultipleRequests([]);
 
     try {
-      const response = await fetch(`${API_URL}/api/track/${referenceNumber.trim()}`);
+      let response;
+      if (searchType === 'reference') {
+        response = await fetch(`${API_URL}/api/track/${referenceNumber.trim()}`);
+      } else {
+        response = await fetch(`${API_URL}/api/track-by-id/${idNumber.trim()}`);
+      }
 
       if (!response.ok) {
         setError('خطأ في الاتصال بالخادم');
@@ -28,13 +41,19 @@ const RequestTracker = () => {
       const data = await response.json();
 
       if (data.found) {
-        setRequestData(data.request);
+        if (searchType === 'reference') {
+          setRequestData(data.request);
+        } else {
+          setMultipleRequests(data.requests);
+        }
       } else {
-        setError('لم يتم العثور على طلب بهذا الرقم. تأكد من صحة رقم المرجع');
+        setError(searchType === 'reference'
+          ? 'لم يتم العثور على طلب بهذا الرقم. تأكد من صحة رقم المرجع'
+          : 'لم يتم العثور على طلبات مرتبطة برقم الهوية هذا');
       }
     } catch (err) {
       console.error('Search error:', err);
-      setError('تعذر الاتصال بالخادم. تأكد من تشغيل الخادم على المنفذ 3001');
+      setError('تعذر الاتصال بالخادم');
     } finally {
       setLoading(false);
     }
@@ -166,20 +185,56 @@ const RequestTracker = () => {
             <div style={styles.searchIcon}>🔍</div>
             <h2 style={styles.searchTitle}>تتبع حالة طلبك</h2>
             <p style={styles.searchSubtitle}>
-              أدخل رقم المرجع الذي حصلت عليه عند تقديم الطلب
+              ابحث عن طلباتك باستخدام رقم المرجع أو رقم الهوية
             </p>
 
+            {/* Search Type Tabs */}
+            <div style={styles.searchTabs}>
+              <button
+                onClick={() => { setSearchType('idNumber'); setError(''); setRequestData(null); setMultipleRequests([]); }}
+                style={{
+                  ...styles.searchTab,
+                  ...(searchType === 'idNumber' && styles.searchTabActive)
+                }}
+              >
+                🪪 البحث برقم الهوية
+              </button>
+              <button
+                onClick={() => { setSearchType('reference'); setError(''); setRequestData(null); setMultipleRequests([]); }}
+                style={{
+                  ...styles.searchTab,
+                  ...(searchType === 'reference' && styles.searchTabActive)
+                }}
+              >
+                🔢 البحث برقم الطلب
+              </button>
+            </div>
+
             <div style={styles.searchBox}>
-              <input
-                type="text"
-                className="search-input"
-                value={referenceNumber}
-                onChange={(e) => setReferenceNumber(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="مثال: 1765793250613"
-                style={styles.input}
-                dir="ltr"
-              />
+              {searchType === 'reference' ? (
+                <input
+                  type="text"
+                  className="search-input"
+                  value={referenceNumber}
+                  onChange={(e) => setReferenceNumber(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  placeholder="أدخل رقم الطلب..."
+                  style={styles.input}
+                  dir="ltr"
+                />
+              ) : (
+                <input
+                  type="text"
+                  className="search-input"
+                  value={idNumber}
+                  onChange={(e) => setIdNumber(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  placeholder="أدخل رقم الهوية (9 أرقام)"
+                  style={styles.input}
+                  dir="ltr"
+                  maxLength={9}
+                />
+              )}
               <button
                 className="search-btn"
                 onClick={handleSearch}
@@ -208,7 +263,60 @@ const RequestTracker = () => {
             )}
           </div>
 
-          {/* Results */}
+          {/* Multiple Results (from ID search) */}
+          {multipleRequests.length > 0 && (
+            <div style={styles.multipleResultsContainer}>
+              <h3 style={styles.multipleResultsTitle}>
+                تم العثور على {multipleRequests.length} طلب/طلبات
+              </h3>
+              {multipleRequests.map((request, index) => {
+                const statusInfo = getStatusInfo(request.status);
+                return (
+                  <div key={request.id} className="result-card" style={styles.multipleResultCard}>
+                    <div style={styles.multipleResultHeader}>
+                      <div style={styles.multipleResultInfo}>
+                        <span style={styles.multipleResultType}>{getTypeLabel(request.type).ar}</span>
+                        <span style={styles.multipleResultDate}>{formatDate(request.submittedAt)}</span>
+                      </div>
+                      <div style={{
+                        ...styles.multipleResultStatus,
+                        background: statusInfo.bgColor,
+                        color: statusInfo.color
+                      }}>
+                        {statusInfo.icon} {statusInfo.label}
+                      </div>
+                    </div>
+                    <div style={styles.multipleResultDetails}>
+                      <span style={styles.multipleResultId}>رقم الطلب: {request.id}</span>
+                      {request.data?.fullName && (
+                        <span style={styles.multipleResultName}>{request.data.fullName}</span>
+                      )}
+                    </div>
+                    {request.notes && (
+                      <div style={styles.multipleResultNotes}>
+                        <strong>ملاحظات:</strong> {request.notes}
+                      </div>
+                    )}
+                    {request.adminResponseFile && (
+                      <div style={styles.multipleResultFile}>
+                        <span>📥 ملف متاح للتحميل: </span>
+                        <a
+                          href={`${API_URL}/${request.adminResponseFile.path}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={styles.multipleResultDownloadBtn}
+                        >
+                          {request.adminResponseFile.originalname}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Single Result (from reference search) */}
           {requestData && (
             <div className="result-card" style={styles.resultCard}>
               {/* Status Header */}
@@ -357,21 +465,21 @@ const RequestTracker = () => {
           )}
 
           {/* Help Section */}
-          {!requestData && (
+          {!requestData && multipleRequests.length === 0 && (
             <div style={styles.helpSection}>
-              <h3 style={styles.helpTitle}>أين أجد رقم المرجع؟</h3>
+              <h3 style={styles.helpTitle}>كيف أتتبع طلباتي؟</h3>
               <div style={styles.helpCards}>
                 <div style={styles.helpCard}>
-                  <span style={styles.helpIcon}>📧</span>
-                  <p style={styles.helpText}>تم إرساله إلى بريدك الإلكتروني عند تقديم الطلب</p>
-                </div>
-                <div style={styles.helpCard}>
-                  <span style={styles.helpIcon}>📝</span>
-                  <p style={styles.helpText}>يظهر في صفحة التأكيد بعد إرسال الطلب</p>
+                  <span style={styles.helpIcon}>🪪</span>
+                  <p style={styles.helpText}>أدخل رقم هويتك لعرض جميع طلباتك السابقة</p>
                 </div>
                 <div style={styles.helpCard}>
                   <span style={styles.helpIcon}>🔢</span>
-                  <p style={styles.helpText}>رقم مكون من 13 رقمًا يتم إرساله عند تأكيد الطلب</p>
+                  <p style={styles.helpText}>أو أدخل رقم الطلب الذي حصلت عليه عند التقديم</p>
+                </div>
+                <div style={styles.helpCard}>
+                  <span style={styles.helpIcon}>📱</span>
+                  <p style={styles.helpText}>رقم الهوية أسهل للتذكر - استخدمه دائماً!</p>
                 </div>
               </div>
             </div>
@@ -446,6 +554,29 @@ const styles = {
     fontSize: '15px',
     color: '#718096',
     margin: '0 0 28px 0',
+  },
+  searchTabs: {
+    display: 'flex',
+    gap: '8px',
+    marginBottom: '20px',
+    justifyContent: 'center',
+  },
+  searchTab: {
+    padding: '12px 20px',
+    border: '2px solid #e2e8f0',
+    background: '#fff',
+    borderRadius: '10px',
+    fontSize: '14px',
+    fontWeight: '600',
+    fontFamily: '"Tajawal", sans-serif',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    color: '#64748b',
+  },
+  searchTabActive: {
+    background: '#1a365d',
+    borderColor: '#1a365d',
+    color: '#fff',
   },
   searchBox: {
     display: 'flex',
@@ -703,6 +834,93 @@ const styles = {
     fontFamily: '"Tajawal", sans-serif',
     boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
     transition: 'all 0.3s ease',
+  },
+  multipleResultsContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+  },
+  multipleResultsTitle: {
+    fontSize: '20px',
+    fontWeight: '700',
+    color: '#1a365d',
+    textAlign: 'center',
+    marginBottom: '8px',
+  },
+  multipleResultCard: {
+    background: '#fff',
+    borderRadius: '12px',
+    padding: '20px',
+    border: '2px solid #e2e8f0',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+  },
+  multipleResultHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '12px',
+  },
+  multipleResultInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+  multipleResultType: {
+    fontSize: '16px',
+    fontWeight: '700',
+    color: '#1a365d',
+  },
+  multipleResultDate: {
+    fontSize: '13px',
+    color: '#64748b',
+  },
+  multipleResultStatus: {
+    padding: '8px 16px',
+    borderRadius: '20px',
+    fontSize: '13px',
+    fontWeight: '600',
+  },
+  multipleResultDetails: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    padding: '12px',
+    background: '#f8fafc',
+    borderRadius: '8px',
+    marginBottom: '12px',
+  },
+  multipleResultId: {
+    fontSize: '12px',
+    color: '#64748b',
+    fontFamily: 'monospace',
+  },
+  multipleResultName: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#1a365d',
+  },
+  multipleResultNotes: {
+    padding: '12px',
+    background: '#fffbeb',
+    borderRadius: '8px',
+    fontSize: '13px',
+    color: '#92400e',
+    marginBottom: '12px',
+  },
+  multipleResultFile: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px',
+    background: '#ecfdf5',
+    borderRadius: '8px',
+    fontSize: '14px',
+    color: '#065f46',
+  },
+  multipleResultDownloadBtn: {
+    color: '#059669',
+    fontWeight: '600',
+    textDecoration: 'underline',
   },
   contactBox: {
     display: 'flex',

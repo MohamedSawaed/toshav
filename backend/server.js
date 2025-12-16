@@ -301,6 +301,42 @@ app.get('/api/track/:referenceNumber', async (req, res) => {
   }
 });
 
+// ===== TRACK BY ID NUMBER =====
+app.get('/api/track-by-id/:idNumber', async (req, res) => {
+  try {
+    const { idNumber } = req.params;
+
+    // Search for submissions where data.idNumber or data.ownerId matches
+    const submissions = await Submission.find({
+      $or: [
+        { 'data.idNumber': idNumber },
+        { 'data.ownerId': idNumber }
+      ],
+      type: { $in: ['documentAuth', 'officialDoc'] }
+    }).sort({ submittedAt: -1 });
+
+    if (submissions.length > 0) {
+      res.json({
+        found: true,
+        requests: submissions.map(s => ({
+          id: s._id,
+          type: s.type,
+          status: s.status,
+          submittedAt: s.submittedAt,
+          notes: s.notes || null,
+          data: { fullName: s.data?.fullName || s.data?.ownerName || null },
+          adminResponseFile: s.adminResponseFile || null
+        }))
+      });
+    } else {
+      res.json({ found: false, requests: [] });
+    }
+  } catch (error) {
+    console.error('Error tracking by ID:', error);
+    res.json({ found: false, requests: [] });
+  }
+});
+
 // ===== ADMIN: GET SUBMISSIONS =====
 app.get('/api/admin/submissions/:type', adminAuth, async (req, res) => {
   try {
