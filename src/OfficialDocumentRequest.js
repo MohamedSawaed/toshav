@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import API_URL from './config';
 
 const OfficialDocumentRequest = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -124,7 +125,7 @@ const OfficialDocumentRequest = () => {
         formDataToSend.append('documents', file);
       });
 
-      const response = await fetch('http://localhost:3001/api/official-doc', {
+      const response = await fetch(`${API_URL}/api/official-doc`, {
         method: 'POST',
         body: formDataToSend
       });

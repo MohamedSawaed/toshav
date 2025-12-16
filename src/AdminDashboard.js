@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import API_BASE_URL from './config';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = `${API_BASE_URL}/api`;
 const ADMIN_TOKEN = 'admin-secret-token'; // In production, use proper authentication
 
 const AdminDashboard = () => {

@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { PDFDocument } from 'pdf-lib';
+import API_URL from './config';
 
 // Import PDF from src folder
 import toshavmailPdf from './toshavmail.pdf';
@@ -205,7 +206,7 @@ export default function ResidentCertificateLookup() {
     if (pdfUrl) {
       // Log the download to the server
       try {
-        await fetch('http://localhost:3001/api/certificate/download-log', {
+        await fetch(`${API_URL}/api/certificate/download-log`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

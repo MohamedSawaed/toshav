@@ -6,11 +6,12 @@ import TenderAnnouncements from './TenderAnnouncements';
 import OfficialDocumentRequest from './OfficialDocumentRequest';
 import RequestTracker from './RequestTracker';
 import AdminDashboard from './AdminDashboard';
+import API_URL from './config';
 
 // Helper function to log visits
 const logVisit = async (page) => {
   try {
-    await fetch('http://localhost:3001/api/visit/log', {
+    await fetch(`${API_URL}/api/visit/log`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

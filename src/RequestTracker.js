@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import API_URL from './config';
 
 const RequestTracker = () => {
   const [referenceNumber, setReferenceNumber] = useState('');
@@ -17,7 +18,7 @@ const RequestTracker = () => {
     setRequestData(null);
 
     try {
-      const response = await fetch(`http://localhost:3001/api/track/${referenceNumber.trim()}`);
+      const response = await fetch(`${API_URL}/api/track/${referenceNumber.trim()}`);
 
       if (!response.ok) {
         setError('خطأ في الاتصال بالخادم');

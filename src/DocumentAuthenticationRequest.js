@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import API_URL from './config';
 
 const DocumentAuthenticationRequest = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -79,7 +80,7 @@ const DocumentAuthenticationRequest = () => {
         formDataObj.append('documents', formData.documentFile);
       }
 
-      const response = await fetch('http://localhost:3001/api/document-auth', {
+      const response = await fetch(`${API_URL}/api/document-auth`, {
         method: 'POST',
         body: formDataObj
       });
