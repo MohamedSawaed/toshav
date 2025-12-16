@@ -276,9 +276,9 @@ const DocumentAuthenticationRequest = () => {
               </div>
 
               <p style={styles.emailSentNote}>
-                تم إرسال رقم التتبع إلى بريدك الإلكتروني
+                احتفظ بهذا الرقم لتتبع طلبك
                 <br />
-                מספר המעקב נשלח לדוא"ל שלך
+                שמור מספר זה למעקב אחר הבקשה שלך
               </p>
 
               <button

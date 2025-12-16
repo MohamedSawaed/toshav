@@ -349,7 +349,7 @@ const OfficialDocumentRequest = () => {
               </div>
 
               <p style={styles.emailSentNote}>
-                تم إرسال رقم التتبع إلى بريدك الإلكتروني
+                احتفظ بهذا الرقم لتتبع طلبك
               </p>
 
               <div style={styles.summaryCard}>
