@@ -505,7 +505,7 @@ const RequestTracker = () => {
                                 </div>
                               </div>
                               <a
-                                href={request.adminResponseFile.url || `${API_URL}/${request.adminResponseFile.path}`}
+                                href={request.adminResponseFile.url || `${API_URL.replace('/api', '')}/${request.adminResponseFile.path}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="download-btn"
@@ -692,7 +692,7 @@ const RequestTracker = () => {
                           </div>
                         </div>
                         <a
-                          href={requestData.adminResponseFile.url || `${API_URL}/${requestData.adminResponseFile.path}`}
+                          href={requestData.adminResponseFile.url || `${API_URL.replace('/api', '')}/${requestData.adminResponseFile.path}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="download-btn"
