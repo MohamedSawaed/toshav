@@ -384,7 +384,7 @@ const AdminDashboard = () => {
                 {selectedSubmission.files.map((file, index) => (
                   <div key={index} style={styles.fileItem}>
                     <span>📎 {file.originalname}</span>
-                    <a href={`${API_URL.replace('/api', '')}/${file.path}`} target="_blank" rel="noopener noreferrer">
+                    <a href={file.url || `${API_URL.replace('/api', '')}/${file.path}`} target="_blank" rel="noopener noreferrer">
                       تحميل
                     </a>
                   </div>
@@ -409,7 +409,7 @@ const AdminDashboard = () => {
                   </div>
                   <div style={styles.responseFileActions}>
                     <a
-                      href={`${API_URL.replace('/api', '')}/${selectedSubmission.adminResponseFile.path}`}
+                      href={selectedSubmission.adminResponseFile.url || `${API_URL.replace('/api', '')}/${selectedSubmission.adminResponseFile.path}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={styles.downloadResponseBtn}
@@ -446,28 +446,6 @@ const AdminDashboard = () => {
             </div>
 
             <div style={styles.actionsSection}>
-              <h4>تحديث الحالة:</h4>
-              <div style={styles.actionButtons}>
-                <button
-                  onClick={() => updateSubmissionStatus(selectedSubmission.id, 'approved', '')}
-                  style={{ ...styles.actionBtn, ...styles.approveBtn }}
-                >
-                  قبول
-                </button>
-                <button
-                  onClick={() => updateSubmissionStatus(selectedSubmission.id, 'rejected', '')}
-                  style={{ ...styles.actionBtn, ...styles.rejectBtn }}
-                >
-                  رفض
-                </button>
-                <button
-                  onClick={() => deleteSubmission(selectedSubmission.id)}
-                  style={{ ...styles.actionBtn, ...styles.deleteBtn }}
-                >
-                  حذف
-                </button>
-              </div>
-
               <div style={styles.notesSection}>
                 <label>ملاحظات:</label>
                 <textarea
@@ -475,12 +453,35 @@ const AdminDashboard = () => {
                   onChange={(e) => setSelectedSubmission({...selectedSubmission, notes: e.target.value})}
                   style={styles.notesInput}
                   rows={4}
+                  placeholder="أضف ملاحظات للمستخدم..."
                 />
+              </div>
+
+              <h4>تحديث الحالة:</h4>
+              <div style={styles.actionButtons}>
                 <button
-                  onClick={() => updateSubmissionStatus(selectedSubmission.id, selectedSubmission.status, selectedSubmission.notes)}
-                  style={styles.saveNotesBtn}
+                  onClick={() => updateSubmissionStatus(selectedSubmission.id, 'approved', selectedSubmission.notes || '')}
+                  style={{ ...styles.actionBtn, ...styles.approveBtn }}
                 >
-                  حفظ الملاحظات
+                  قبول
+                </button>
+                <button
+                  onClick={() => updateSubmissionStatus(selectedSubmission.id, 'rejected', selectedSubmission.notes || '')}
+                  style={{ ...styles.actionBtn, ...styles.rejectBtn }}
+                >
+                  رفض
+                </button>
+                <button
+                  onClick={() => updateSubmissionStatus(selectedSubmission.id, 'pending', selectedSubmission.notes || '')}
+                  style={{ ...styles.actionBtn, ...styles.pendingBtn }}
+                >
+                  قيد الانتظار
+                </button>
+                <button
+                  onClick={() => deleteSubmission(selectedSubmission.id)}
+                  style={{ ...styles.actionBtn, ...styles.deleteBtn }}
+                >
+                  حذف
                 </button>
               </div>
             </div>
@@ -1339,6 +1340,10 @@ const styles = {
   },
   rejectBtn: {
     background: '#ef4444',
+    color: '#fff',
+  },
+  pendingBtn: {
+    background: '#f59e0b',
     color: '#fff',
   },
   deleteBtn: {

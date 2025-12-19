@@ -6,7 +6,39 @@ const cors = require('cors');
 const multer = require('multer');
 const fs = require('fs');
 const { Resend } = require('resend');
+const cloudinary = require('cloudinary').v2;
 const { connectDB, Submission, Tender, DownloadLog, VisitLog } = require('./db');
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Helper function to upload file to Cloudinary
+const uploadToCloudinary = async (filePath, originalname) => {
+  try {
+    const result = await cloudinary.uploader.upload(filePath, {
+      folder: 'husniyya-uploads',
+      resource_type: 'auto',
+      public_id: `${Date.now()}-${originalname.replace(/\.[^/.]+$/, '')}`
+    });
+    // Delete local file after upload
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+    return {
+      url: result.secure_url,
+      public_id: result.public_id,
+      originalname: originalname,
+      size: result.bytes
+    };
+  } catch (error) {
+    console.error('Cloudinary upload error:', error);
+    throw error;
+  }
+};
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -100,15 +132,19 @@ const adminAuth = (req, res, next) => {
 // ===== DOCUMENT AUTHENTICATION =====
 app.post('/api/document-auth', upload.array('documents', 5), async (req, res) => {
   try {
+    // Upload files to Cloudinary
+    const uploadedFiles = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const cloudFile = await uploadToCloudinary(file.path, file.originalname);
+        uploadedFiles.push(cloudFile);
+      }
+    }
+
     const submission = new Submission({
       type: 'documentAuth',
       data: JSON.parse(req.body.formData),
-      files: req.files?.map(f => ({
-        filename: f.filename,
-        originalname: f.originalname,
-        size: f.size,
-        path: f.path
-      })) || [],
+      files: uploadedFiles,
       status: 'pending',
       emailSentTo: process.env.NOTIFICATION_EMAIL || 'sawaedmohamed.20@gmail.com'
     });
@@ -164,15 +200,19 @@ app.post('/api/document-auth', upload.array('documents', 5), async (req, res) =>
 // ===== OFFICIAL DOCUMENT =====
 app.post('/api/official-doc', upload.array('documents', 5), async (req, res) => {
   try {
+    // Upload files to Cloudinary
+    const uploadedFiles = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const cloudFile = await uploadToCloudinary(file.path, file.originalname);
+        uploadedFiles.push(cloudFile);
+      }
+    }
+
     const submission = new Submission({
       type: 'officialDoc',
       data: JSON.parse(req.body.formData),
-      files: req.files?.map(f => ({
-        filename: f.filename,
-        originalname: f.originalname,
-        size: f.size,
-        path: f.path
-      })) || [],
+      files: uploadedFiles,
       status: 'pending',
       emailSentTo: process.env.NOTIFICATION_EMAIL || 'sawaedmohamed.20@gmail.com'
     });
@@ -228,15 +268,19 @@ app.post('/api/official-doc', upload.array('documents', 5), async (req, res) => 
 // ===== TENDER SUBMISSIONS =====
 app.post('/api/tenders', upload.array('documents', 10), async (req, res) => {
   try {
+    // Upload files to Cloudinary
+    const uploadedFiles = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const cloudFile = await uploadToCloudinary(file.path, file.originalname);
+        uploadedFiles.push(cloudFile);
+      }
+    }
+
     const submission = new Submission({
       type: 'tender',
       data: JSON.parse(req.body.formData),
-      files: req.files?.map(f => ({
-        filename: f.filename,
-        originalname: f.originalname,
-        size: f.size,
-        path: f.path
-      })) || [],
+      files: uploadedFiles,
       status: 'pending'
     });
 
@@ -396,14 +440,18 @@ app.post('/api/admin/submission/:id/upload-response', adminAuth, upload.single('
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
+    // Upload to Cloudinary
+    const cloudFile = await uploadToCloudinary(req.file.path, req.file.originalname);
+
     const submission = await Submission.findByIdAndUpdate(
       id,
       {
         adminResponseFile: {
-          filename: req.file.filename,
-          originalname: req.file.originalname,
-          size: req.file.size,
-          path: req.file.path,
+          filename: cloudFile.public_id,
+          originalname: cloudFile.originalname,
+          size: cloudFile.size,
+          url: cloudFile.url,
+          public_id: cloudFile.public_id,
           uploadedAt: new Date()
         },
         updatedAt: new Date()
@@ -415,8 +463,6 @@ app.post('/api/admin/submission/:id/upload-response', adminAuth, upload.single('
       console.log(`Admin response file uploaded for submission ${id}: ${req.file.originalname}`);
       res.json({ success: true, submission, file: submission.adminResponseFile });
     } else {
-      // Delete the uploaded file if submission not found
-      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       res.status(404).json({ error: 'Submission not found' });
     }
   } catch (error) {
@@ -435,10 +481,12 @@ app.delete('/api/admin/submission/:id/response-file', adminAuth, async (req, res
       return res.status(404).json({ error: 'Submission not found' });
     }
 
-    // Delete the file from disk
-    if (submission.adminResponseFile && submission.adminResponseFile.path) {
-      if (fs.existsSync(submission.adminResponseFile.path)) {
-        fs.unlinkSync(submission.adminResponseFile.path);
+    // Delete the file from Cloudinary
+    if (submission.adminResponseFile && submission.adminResponseFile.public_id) {
+      try {
+        await cloudinary.uploader.destroy(submission.adminResponseFile.public_id);
+      } catch (cloudError) {
+        console.error('Cloudinary delete error:', cloudError);
       }
     }
 
