@@ -442,18 +442,22 @@ app.post('/api/admin/submission/:id/upload-response', adminAuth, upload.single('
 
     // Upload to Cloudinary
     const cloudFile = await uploadToCloudinary(req.file.path, req.file.originalname);
+    console.log('Cloudinary upload result:', JSON.stringify(cloudFile, null, 2));
+
+    const adminResponseFile = {
+      filename: cloudFile.public_id,
+      originalname: cloudFile.originalname,
+      size: cloudFile.size,
+      url: cloudFile.url,
+      public_id: cloudFile.public_id,
+      uploadedAt: new Date()
+    };
+    console.log('Saving adminResponseFile:', JSON.stringify(adminResponseFile, null, 2));
 
     const submission = await Submission.findByIdAndUpdate(
       id,
       {
-        adminResponseFile: {
-          filename: cloudFile.public_id,
-          originalname: cloudFile.originalname,
-          size: cloudFile.size,
-          url: cloudFile.url,
-          public_id: cloudFile.public_id,
-          uploadedAt: new Date()
-        },
+        adminResponseFile: adminResponseFile,
         updatedAt: new Date()
       },
       { new: true }
@@ -461,6 +465,7 @@ app.post('/api/admin/submission/:id/upload-response', adminAuth, upload.single('
 
     if (submission) {
       console.log(`Admin response file uploaded for submission ${id}: ${req.file.originalname}`);
+      console.log('Saved submission.adminResponseFile:', JSON.stringify(submission.adminResponseFile, null, 2));
       res.json({ success: true, submission, file: submission.adminResponseFile });
     } else {
       res.status(404).json({ error: 'Submission not found' });
