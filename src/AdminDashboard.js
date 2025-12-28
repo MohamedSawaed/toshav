@@ -1137,13 +1137,15 @@ const ProtocolForm = ({ onSuccess, editingProtocol }) => {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('titleHe', formData.titleHe);
-      formDataToSend.append('meetingDate', formData.meetingDate);
-      formDataToSend.append('meetingNumber', formData.meetingNumber);
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('descriptionHe', formData.descriptionHe);
-      formDataToSend.append('status', formData.status);
+      formDataToSend.append('protocolData', JSON.stringify({
+        title: formData.title,
+        titleHe: formData.titleHe,
+        meetingDate: formData.meetingDate,
+        meetingNumber: formData.meetingNumber,
+        description: formData.description,
+        descriptionHe: formData.descriptionHe,
+        status: formData.status
+      }));
       if (file) {
         formDataToSend.append('file', file);
       }
