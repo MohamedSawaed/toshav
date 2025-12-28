@@ -17,14 +17,6 @@ const DocumentAuthenticationRequest = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submissionId, setSubmissionId] = useState('');
 
-  const documentTypes = [
-    { id: 'certificate', labelAr: 'شهادة', labelHe: 'תעודה', icon: '📜' },
-    { id: 'pledge', labelAr: 'تعهد', labelHe: 'התחייבות', icon: '✍️' },
-    { id: 'statement', labelAr: 'إفادة', labelHe: 'הצהרה', icon: '📋' },
-    { id: 'education', labelAr: 'مستند تعليمي', labelHe: 'מסמך לימודים', icon: '🎓' },
-    { id: 'employment', labelAr: 'مستند عمل', labelHe: 'מסמך עבודה', icon: '💼' }
-  ];
-
   const steps = [
     { number: 1, titleAr: 'رفع المستند', titleHe: 'העלאת מסמך' },
     { number: 2, titleAr: 'نوع المصادقة', titleHe: 'סוג האימות' },
@@ -360,28 +352,25 @@ const DocumentAuthenticationRequest = () => {
                   <h2 style={styles.stepHeading}>نوع المصادقة المطلوبة</h2>
                   <p style={styles.stepHeadingHe}>סוג האימות הנדרש</p>
                   <p style={styles.stepDescription}>
-                    اختر نوع المستند الذي تريد تصديقه
+                    اكتب نوع المستند أو المصادقة المطلوبة
                   </p>
 
-                  <div style={styles.docTypesGrid}>
-                    {documentTypes.map((type) => (
-                      <div
-                        key={type.id}
-                        className="doc-type-card"
-                        style={{
-                          ...styles.docTypeCard,
-                          ...(formData.documentType === type.id ? styles.docTypeCardSelected : {})
-                        }}
-                        onClick={() => handleInputChange('documentType', type.id)}
-                      >
-                        <span style={styles.docTypeIcon}>{type.icon}</span>
-                        <span style={styles.docTypeLabel}>{type.labelAr}</span>
-                        <span style={styles.docTypeLabelHe}>{type.labelHe}</span>
-                        {formData.documentType === type.id && (
-                          <div style={styles.selectedBadge}>✓</div>
-                        )}
-                      </div>
-                    ))}
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>
+                      <span style={styles.labelIcon}>📋</span>
+                      نوع المصادقة * | סוג האימות
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={styles.input}
+                      value={formData.documentType}
+                      onChange={(e) => handleInputChange('documentType', e.target.value)}
+                      placeholder="مثال: شهادة، تعهد، إفادة، مستند تعليمي..."
+                    />
+                    <p style={styles.inputHint}>
+                      أمثلة: شهادة ميلاد، تعهد، إفادة سكن، مستند تعليمي، مستند عمل، وكالة، عقد...
+                    </p>
                   </div>
                 </div>
               )}
@@ -500,7 +489,7 @@ const DocumentAuthenticationRequest = () => {
                         <div style={styles.reviewItem}>
                           <span style={styles.reviewLabel}>نوع المصادقة:</span>
                           <span style={styles.reviewValue}>
-                            {documentTypes.find(t => t.id === formData.documentType)?.labelAr}
+                            {formData.documentType}
                           </span>
                         </div>
                       </div>
@@ -931,6 +920,12 @@ const styles = {
     resize: 'vertical',
     minHeight: '100px',
     lineHeight: 1.7,
+  },
+  inputHint: {
+    fontSize: '13px',
+    color: '#718096',
+    margin: '8px 0 0 0',
+    lineHeight: 1.5,
   },
   reviewCard: {
     background: '#f8fafc',
