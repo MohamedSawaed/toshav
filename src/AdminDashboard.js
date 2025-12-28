@@ -19,6 +19,9 @@ const AdminDashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [protocols, setProtocols] = useState([]);
+  const [showProtocolForm, setShowProtocolForm] = useState(false);
+  const [editingProtocol, setEditingProtocol] = useState(null);
 
   // Handle window resize for responsive design
   useEffect(() => {
@@ -42,7 +45,7 @@ const AdminDashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (activeTab !== 'overview' && activeTab !== 'publish-tender' && activeTab !== 'downloads' && activeTab !== 'visits') {
+    if (activeTab !== 'overview' && activeTab !== 'publish-tender' && activeTab !== 'downloads' && activeTab !== 'visits' && activeTab !== 'protocols') {
       fetchSubmissions(activeTab);
     } else if (activeTab === 'publish-tender') {
       fetchPublishedTenders();
@@ -52,6 +55,8 @@ const AdminDashboard = () => {
     } else if (activeTab === 'visits') {
       fetchVisitsLog();
       fetchVisitsStats();
+    } else if (activeTab === 'protocols') {
+      fetchProtocols();
     }
   }, [activeTab]);
 
@@ -134,6 +139,33 @@ const AdminDashboard = () => {
       setVisitsStats(data);
     } catch (error) {
       console.error('Error fetching visits stats:', error);
+    }
+  };
+
+  const fetchProtocols = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/admin/protocols/all`, { headers });
+      const data = await response.json();
+      setProtocols(data);
+    } catch (error) {
+      console.error('Error fetching protocols:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteProtocol = async (id) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا البروتوكول؟')) return;
+
+    try {
+      await fetch(`${API_URL}/admin/protocols/${id}`, {
+        method: 'DELETE',
+        headers
+      });
+      fetchProtocols();
+    } catch (error) {
+      console.error('Error deleting protocol:', error);
     }
   };
 
@@ -738,6 +770,82 @@ const AdminDashboard = () => {
     );
   };
 
+  const renderProtocolsManagement = () => {
+    return (
+      <div>
+        <div style={styles.headerRow}>
+          <h2 style={styles.sectionTitle}>إدارة بروتوكولات الجلسات</h2>
+          <button onClick={() => { setShowProtocolForm(!showProtocolForm); setEditingProtocol(null); }} style={styles.publishBtn}>
+            {showProtocolForm ? 'إلغاء' : '+ إضافة بروتوكول جديد'}
+          </button>
+        </div>
+
+        {showProtocolForm && (
+          <ProtocolForm
+            onSuccess={() => { setShowProtocolForm(false); setEditingProtocol(null); fetchProtocols(); }}
+            editingProtocol={editingProtocol}
+          />
+        )}
+
+        {loading ? (
+          <div style={styles.loading}>جاري التحميل...</div>
+        ) : protocols.length === 0 ? (
+          <div style={styles.emptyState}>لا توجد بروتوكولات حالياً</div>
+        ) : (
+          <div style={styles.tendersGrid}>
+            {protocols.map(protocol => (
+              <div key={protocol.id || protocol._id} style={styles.protocolCard}>
+                <div style={styles.tenderHeader}>
+                  <h3 style={styles.protocolTitle}>{protocol.title}</h3>
+                  <span style={{
+                    ...styles.statusBadge,
+                    ...(protocol.status === 'published' && styles.statusApproved),
+                    ...(protocol.status === 'draft' && styles.statusPending)
+                  }}>
+                    {protocol.status === 'published' ? 'منشور' : 'مسودة'}
+                  </span>
+                </div>
+                {protocol.titleHe && <p style={styles.protocolTitleHe}>{protocol.titleHe}</p>}
+                <div style={styles.protocolMeta}>
+                  <div style={styles.protocolMetaItem}>
+                    <span>📅</span>
+                    <span>تاريخ الجلسة: {new Date(protocol.meetingDate).toLocaleDateString('ar')}</span>
+                  </div>
+                  {protocol.meetingNumber && (
+                    <div style={styles.protocolMetaItem}>
+                      <span>🔢</span>
+                      <span>رقم الجلسة: {protocol.meetingNumber}</span>
+                    </div>
+                  )}
+                </div>
+                {protocol.description && <p style={styles.tenderDesc}>{protocol.description}</p>}
+                {protocol.file && protocol.file.url && (
+                  <div style={styles.protocolFileInfo}>
+                    <span>📎</span>
+                    <a href={protocol.file.url} target="_blank" rel="noopener noreferrer" style={styles.protocolFileLink}>
+                      {protocol.file.originalname || 'تحميل الملف'}
+                    </a>
+                  </div>
+                )}
+                <div style={styles.tenderActions}>
+                  <button
+                    onClick={() => { setEditingProtocol(protocol); setShowProtocolForm(true); }}
+                    style={styles.editProtocolBtn}
+                  >
+                    تعديل
+                  </button>
+                  <button onClick={() => deleteProtocol(protocol.id || protocol._id)} style={styles.deleteTenderBtn}>
+                    حذف
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setMobileMenuOpen(false);
@@ -752,6 +860,7 @@ const AdminDashboard = () => {
     { id: 'downloads', icon: '📥', label: 'سجل التنزيلات' },
     { id: 'visits', icon: '👁️', label: 'سجل الزيارات' },
     { id: 'publish-tender', icon: '📢', label: 'نشر مناقصة' },
+    { id: 'protocols', icon: '📑', label: 'بروتوكولات الجلسات' },
   ];
 
   return (
@@ -855,6 +964,7 @@ const AdminDashboard = () => {
           {activeTab === 'downloads' && renderDownloadsLog()}
           {activeTab === 'visits' && renderVisitsLog()}
           {activeTab === 'publish-tender' && renderPublishTender()}
+          {activeTab === 'protocols' && renderProtocolsManagement()}
         </div>
       </div>
     </div>
@@ -1004,6 +1114,163 @@ const TenderForm = ({ onSuccess }) => {
       </div>
 
       <button type="submit" style={styles.submitBtn}>نشر المناقصة</button>
+    </form>
+  );
+};
+
+const ProtocolForm = ({ onSuccess, editingProtocol }) => {
+  const [formData, setFormData] = useState({
+    title: editingProtocol?.title || '',
+    titleHe: editingProtocol?.titleHe || '',
+    meetingDate: editingProtocol?.meetingDate ? new Date(editingProtocol.meetingDate).toISOString().split('T')[0] : '',
+    meetingNumber: editingProtocol?.meetingNumber || '',
+    description: editingProtocol?.description || '',
+    descriptionHe: editingProtocol?.descriptionHe || '',
+    status: editingProtocol?.status || 'published'
+  });
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setUploading(true);
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('titleHe', formData.titleHe);
+      formDataToSend.append('meetingDate', formData.meetingDate);
+      formDataToSend.append('meetingNumber', formData.meetingNumber);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('descriptionHe', formData.descriptionHe);
+      formDataToSend.append('status', formData.status);
+      if (file) {
+        formDataToSend.append('file', file);
+      }
+
+      const url = editingProtocol
+        ? `${API_URL}/admin/protocols/${editingProtocol.id || editingProtocol._id}`
+        : `${API_URL}/admin/protocols/add`;
+
+      const response = await fetch(url, {
+        method: editingProtocol ? 'PUT' : 'POST',
+        headers: {
+          'Authorization': `Bearer ${ADMIN_TOKEN}`
+        },
+        body: formDataToSend
+      });
+
+      if (response.ok) {
+        alert(editingProtocol ? 'تم تحديث البروتوكول بنجاح' : 'تم إضافة البروتوكول بنجاح');
+        onSuccess();
+      } else {
+        alert('حدث خطأ أثناء حفظ البروتوكول');
+      }
+    } catch (error) {
+      console.error('Error saving protocol:', error);
+      alert('حدث خطأ أثناء حفظ البروتوكول');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} style={styles.tenderForm}>
+      <div style={styles.formGrid}>
+        <div style={styles.formGroup}>
+          <label>العنوان (عربي) *</label>
+          <input
+            type="text"
+            value={formData.title}
+            onChange={(e) => setFormData({...formData, title: e.target.value})}
+            required
+            style={styles.input}
+          />
+        </div>
+
+        <div style={styles.formGroup}>
+          <label>العنوان (עברית)</label>
+          <input
+            type="text"
+            value={formData.titleHe}
+            onChange={(e) => setFormData({...formData, titleHe: e.target.value})}
+            style={styles.input}
+          />
+        </div>
+
+        <div style={styles.formGroup}>
+          <label>تاريخ الجلسة *</label>
+          <input
+            type="date"
+            value={formData.meetingDate}
+            onChange={(e) => setFormData({...formData, meetingDate: e.target.value})}
+            required
+            style={styles.input}
+          />
+        </div>
+
+        <div style={styles.formGroup}>
+          <label>رقم الجلسة</label>
+          <input
+            type="text"
+            value={formData.meetingNumber}
+            onChange={(e) => setFormData({...formData, meetingNumber: e.target.value})}
+            style={styles.input}
+            placeholder="مثال: 15/2024"
+          />
+        </div>
+
+        <div style={{ ...styles.formGroup, gridColumn: '1 / -1' }}>
+          <label>الوصف (عربي)</label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => setFormData({...formData, description: e.target.value})}
+            style={styles.textarea}
+            rows={3}
+          />
+        </div>
+
+        <div style={{ ...styles.formGroup, gridColumn: '1 / -1' }}>
+          <label>الوصف (עברית)</label>
+          <textarea
+            value={formData.descriptionHe}
+            onChange={(e) => setFormData({...formData, descriptionHe: e.target.value})}
+            style={styles.textarea}
+            rows={3}
+          />
+        </div>
+
+        <div style={styles.formGroup}>
+          <label>الحالة</label>
+          <select
+            value={formData.status}
+            onChange={(e) => setFormData({...formData, status: e.target.value})}
+            style={styles.input}
+          >
+            <option value="published">منشور</option>
+            <option value="draft">مسودة</option>
+          </select>
+        </div>
+
+        <div style={styles.formGroup}>
+          <label>ملف البروتوكول (PDF)</label>
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx"
+            onChange={(e) => setFile(e.target.files[0])}
+            style={styles.input}
+          />
+          {editingProtocol?.file?.originalname && !file && (
+            <span style={{ fontSize: '12px', color: '#64748b' }}>
+              الملف الحالي: {editingProtocol.file.originalname}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <button type="submit" style={styles.submitBtn} disabled={uploading}>
+        {uploading ? 'جاري الحفظ...' : (editingProtocol ? 'تحديث البروتوكول' : 'إضافة البروتوكول')}
+      </button>
     </form>
   );
 };
@@ -1733,6 +2000,64 @@ const styles = {
   },
   contentMobile: {
     padding: '16px',
+  },
+  // Protocol Styles
+  protocolCard: {
+    background: '#fff',
+    borderRadius: '12px',
+    padding: '24px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    border: '1px solid #e2e8f0',
+  },
+  protocolTitle: {
+    fontSize: '18px',
+    fontWeight: '700',
+    color: '#1e293b',
+    margin: 0,
+  },
+  protocolTitleHe: {
+    fontSize: '14px',
+    color: '#64748b',
+    marginTop: '4px',
+    marginBottom: '12px',
+  },
+  protocolMeta: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    marginBottom: '12px',
+  },
+  protocolMetaItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '13px',
+    color: '#64748b',
+  },
+  protocolFileInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 14px',
+    background: '#f8fafc',
+    borderRadius: '8px',
+    marginBottom: '16px',
+  },
+  protocolFileLink: {
+    color: '#3b82f6',
+    textDecoration: 'none',
+    fontSize: '14px',
+    fontWeight: '500',
+  },
+  editProtocolBtn: {
+    padding: '8px 16px',
+    background: '#3b82f6',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontFamily: "'Tajawal', sans-serif",
   },
 };
 

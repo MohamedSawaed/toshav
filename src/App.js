@@ -6,6 +6,7 @@ import TenderAnnouncements from './TenderAnnouncements';
 import OfficialDocumentRequest from './OfficialDocumentRequest';
 import RequestTracker from './RequestTracker';
 import AdminDashboard from './AdminDashboard';
+import MeetingProtocols from './MeetingProtocols';
 import API_URL from './config';
 
 // Helper function to log visits
@@ -97,6 +98,14 @@ function App() {
       titleAr: 'تتبع الطلبات',
       descHe: 'מעקב אחר סטטוס הבקשה',
       descAr: 'تتبع حالة طلبك'
+    },
+    {
+      id: 'protocols',
+      icon: '📑',
+      titleHe: 'פרוטוקולים',
+      titleAr: 'بروتوكولات الجلسات',
+      descHe: 'צפייה בפרוטוקולי ישיבות',
+      descAr: 'عرض بروتوكولات جلسات اللجنة'
     }
   ];
 
@@ -622,7 +631,8 @@ function App() {
     documentAuth: DocumentAuthenticationRequest,
     tenders: TenderAnnouncements,
     officialDoc: OfficialDocumentRequest,
-    tracker: RequestTracker
+    tracker: RequestTracker,
+    protocols: MeetingProtocols
   };
 
   const ViewComponent = views[currentView];

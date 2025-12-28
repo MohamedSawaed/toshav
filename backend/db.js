@@ -69,16 +69,37 @@ const visitLogSchema = new mongoose.Schema({
   userAgent: String
 });
 
+const protocolSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  titleHe: String,
+  meetingDate: { type: Date, required: true },
+  meetingNumber: String,
+  description: String,
+  descriptionHe: String,
+  file: {
+    filename: String,
+    originalname: String,
+    size: Number,
+    url: String,
+    public_id: String
+  },
+  status: { type: String, default: 'published', enum: ['published', 'draft'] },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: Date
+});
+
 // Create Models
 const Submission = mongoose.model('Submission', submissionSchema);
 const Tender = mongoose.model('Tender', tenderSchema);
 const DownloadLog = mongoose.model('DownloadLog', downloadLogSchema);
 const VisitLog = mongoose.model('VisitLog', visitLogSchema);
+const Protocol = mongoose.model('Protocol', protocolSchema);
 
 module.exports = {
   connectDB,
   Submission,
   Tender,
   DownloadLog,
-  VisitLog
+  VisitLog,
+  Protocol
 };

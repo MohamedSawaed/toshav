@@ -7,7 +7,7 @@ const multer = require('multer');
 const fs = require('fs');
 const { Resend } = require('resend');
 const cloudinary = require('cloudinary').v2;
-const { connectDB, Submission, Tender, DownloadLog, VisitLog } = require('./db');
+const { connectDB, Submission, Tender, DownloadLog, VisitLog, Protocol } = require('./db');
 
 // Configure Cloudinary
 cloudinary.config({
@@ -750,6 +750,141 @@ app.get('/api/admin/visits/stats', adminAuth, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to get stats' });
+  }
+});
+
+// ===== PROTOCOLS MANAGEMENT =====
+// Get published protocols (public)
+app.get('/api/protocols/published', async (req, res) => {
+  try {
+    const protocols = await Protocol.find({ status: 'published' })
+      .sort({ meetingDate: -1 });
+    res.json(protocols.map(p => ({ id: p._id, ...p.toObject() })));
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch protocols' });
+  }
+});
+
+// Get all protocols (admin)
+app.get('/api/admin/protocols/all', adminAuth, async (req, res) => {
+  try {
+    const protocols = await Protocol.find().sort({ meetingDate: -1 });
+    res.json(protocols.map(p => ({ id: p._id, ...p.toObject() })));
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch protocols' });
+  }
+});
+
+// Add new protocol (admin)
+app.post('/api/admin/protocols/add', adminAuth, upload.single('file'), async (req, res) => {
+  try {
+    const protocolData = JSON.parse(req.body.protocolData);
+
+    let fileData = null;
+    if (req.file) {
+      const cloudFile = await uploadToCloudinary(req.file.path, req.file.originalname);
+      fileData = {
+        filename: cloudFile.public_id,
+        originalname: cloudFile.originalname,
+        size: cloudFile.size,
+        url: cloudFile.url,
+        public_id: cloudFile.public_id
+      };
+    }
+
+    const protocol = new Protocol({
+      title: protocolData.title,
+      titleHe: protocolData.titleHe,
+      meetingDate: protocolData.meetingDate,
+      meetingNumber: protocolData.meetingNumber,
+      description: protocolData.description,
+      descriptionHe: protocolData.descriptionHe,
+      status: protocolData.status || 'published',
+      file: fileData
+    });
+
+    await protocol.save();
+    console.log(`Protocol added: ${protocol.title}`);
+    res.json({ success: true, protocol: { id: protocol._id, ...protocol.toObject() } });
+  } catch (error) {
+    console.error('Error adding protocol:', error);
+    res.status(500).json({ error: 'Failed to add protocol' });
+  }
+});
+
+// Update protocol (admin)
+app.put('/api/admin/protocols/:id', adminAuth, upload.single('file'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const protocolData = JSON.parse(req.body.protocolData);
+
+    const protocol = await Protocol.findById(id);
+    if (!protocol) {
+      return res.status(404).json({ error: 'Protocol not found' });
+    }
+
+    // Update file if new one uploaded
+    if (req.file) {
+      // Delete old file from Cloudinary
+      if (protocol.file?.public_id) {
+        try {
+          await cloudinary.uploader.destroy(protocol.file.public_id);
+        } catch (e) {
+          console.log('Could not delete old file from Cloudinary');
+        }
+      }
+
+      const cloudFile = await uploadToCloudinary(req.file.path, req.file.originalname);
+      protocol.file = {
+        filename: cloudFile.public_id,
+        originalname: cloudFile.originalname,
+        size: cloudFile.size,
+        url: cloudFile.url,
+        public_id: cloudFile.public_id
+      };
+    }
+
+    protocol.title = protocolData.title;
+    protocol.titleHe = protocolData.titleHe;
+    protocol.meetingDate = protocolData.meetingDate;
+    protocol.meetingNumber = protocolData.meetingNumber;
+    protocol.description = protocolData.description;
+    protocol.descriptionHe = protocolData.descriptionHe;
+    protocol.status = protocolData.status;
+    protocol.updatedAt = new Date();
+
+    await protocol.save();
+    res.json({ success: true, protocol: { id: protocol._id, ...protocol.toObject() } });
+  } catch (error) {
+    console.error('Error updating protocol:', error);
+    res.status(500).json({ error: 'Failed to update protocol' });
+  }
+});
+
+// Delete protocol (admin)
+app.delete('/api/admin/protocols/:id', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const protocol = await Protocol.findById(id);
+
+    if (!protocol) {
+      return res.status(404).json({ error: 'Protocol not found' });
+    }
+
+    // Delete file from Cloudinary
+    if (protocol.file?.public_id) {
+      try {
+        await cloudinary.uploader.destroy(protocol.file.public_id);
+      } catch (e) {
+        console.log('Could not delete file from Cloudinary');
+      }
+    }
+
+    await Protocol.findByIdAndDelete(id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting protocol:', error);
+    res.status(500).json({ error: 'Failed to delete protocol' });
   }
 });
 

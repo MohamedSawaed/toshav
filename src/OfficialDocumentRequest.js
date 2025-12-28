@@ -5,8 +5,6 @@ const OfficialDocumentRequest = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     documentType: '',
-    recipientEntity: '',
-    documentPurpose: '',
     fullName: '',
     idNumber: '',
     address: '',
@@ -94,9 +92,6 @@ const OfficialDocumentRequest = () => {
       formDataToSend.append('formData', JSON.stringify({
         documentType: formData.documentType,
         documentTypeLabel: getSelectedLabel(documentTypes, formData.documentType),
-        recipientEntity: formData.recipientEntity,
-        recipientEntityLabel: getSelectedLabel(recipientEntities, formData.recipientEntity),
-        documentPurpose: formData.documentPurpose,
         fullName: formData.fullName,
         idNumber: formData.idNumber,
         address: formData.address,
