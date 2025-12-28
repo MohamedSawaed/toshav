@@ -26,26 +26,11 @@ const OfficialDocumentRequest = () => {
     { id: 'other', label: 'أخرى', labelHe: 'אחר', icon: '📋' }
   ];
 
-  const recipientEntities = [
-    { id: 'government', label: 'جهة حكومية', labelHe: 'גוף ממשלתי', icon: '🏛️' },
-    { id: 'education', label: 'مؤسسة تعليمية', labelHe: 'מוסד חינוכי', icon: '🎓' },
-    { id: 'health', label: 'مؤسسة صحية', labelHe: 'מוסד בריאות', icon: '🏥' },
-    { id: 'employer', label: 'جهة عمل', labelHe: 'מעסיק', icon: '🏢' },
-    { id: 'court', label: 'محكمة / جهة قانونية', labelHe: 'בית משפט / גוף משפטי', icon: '⚖️' },
-    { id: 'other', label: 'جهة أخرى', labelHe: 'גוף אחר', icon: '📌' }
-  ];
-
-  const documentPurposes = [
-    { id: 'registration', label: 'تسجيل / انتساب', icon: '📝' },
-    { id: 'other', label: 'غرض آخر', icon: '📋' }
-  ];
-
   const steps = [
     { number: 1, title: 'نوع المستند', titleHe: 'סוג המסמך', icon: '📄' },
-    { number: 2, title: 'الجهة والغاية', titleHe: 'גוף ומטרה', icon: '🎯' },
-    { number: 3, title: 'البيانات الشخصية', titleHe: 'פרטים אישיים', icon: '👤' },
-    { number: 4, title: 'تفاصيل الطلب', titleHe: 'פרטי הבקשה', icon: '📝' },
-    { number: 5, title: 'مراجعة وإرسال', titleHe: 'סקירה ושליחה', icon: '✓' }
+    { number: 2, title: 'البيانات الشخصية', titleHe: 'פרטים אישיים', icon: '👤' },
+    { number: 3, title: 'تفاصيل الطلب', titleHe: 'פרטי הבקשה', icon: '📝' },
+    { number: 4, title: 'مراجعة وإرسال', titleHe: 'סקירה ושליחה', icon: '✓' }
   ];
 
   const handleDrag = useCallback((e) => {
@@ -95,9 +80,8 @@ const OfficialDocumentRequest = () => {
   const canProceed = () => {
     switch (currentStep) {
       case 1: return formData.documentType !== '';
-      case 2: return formData.recipientEntity !== '' && formData.documentPurpose !== '';
-      case 3: return formData.fullName && formData.idNumber && formData.address && formData.phone && formData.email;
-      case 4: return formData.subjectDescription.length >= 10;
+      case 2: return formData.fullName && formData.idNumber && formData.address && formData.phone && formData.email;
+      case 3: return formData.subjectDescription.length >= 10;
       default: return true;
     }
   };
@@ -359,10 +343,6 @@ const OfficialDocumentRequest = () => {
                   <span style={styles.summaryValue}>{getSelectedLabel(documentTypes, formData.documentType)}</span>
                 </div>
                 <div style={styles.summaryRow}>
-                  <span style={styles.summaryLabel}>الجهة الموجّه إليها:</span>
-                  <span style={styles.summaryValue}>{getSelectedLabel(recipientEntities, formData.recipientEntity)}</span>
-                </div>
-                <div style={styles.summaryRow}>
                   <span style={styles.summaryLabel}>مقدم الطلب:</span>
                   <span style={styles.summaryValue}>{formData.fullName}</span>
                 </div>
@@ -405,68 +385,8 @@ const OfficialDocumentRequest = () => {
                 </div>
               )}
 
-              {/* Step 2: Recipient & Purpose */}
+              {/* Step 2: Personal Information */}
               {currentStep === 2 && (
-                <div style={styles.stepContent}>
-                  <h2 style={styles.stepHeading}>الجهة الموجّه إليها والغاية</h2>
-                  <p style={styles.stepDescription}>حدد الجهة التي سيُقدّم إليها المستند والغرض منه</p>
-                  
-                  <div style={styles.sectionBlock}>
-                    <h3 style={styles.sectionLabel}>
-                      <span style={styles.sectionIcon}>🏢</span>
-                      الجهة الموجّه إليها
-                    </h3>
-                    <div style={styles.optionsGridSmall}>
-                      {recipientEntities.map((entity) => (
-                        <div
-                          key={entity.id}
-                          className="option-card"
-                          style={{
-                            ...styles.optionCardSmall,
-                            ...(formData.recipientEntity === entity.id ? styles.optionCardSelected : {})
-                          }}
-                          onClick={() => handleInputChange('recipientEntity', entity.id)}
-                        >
-                          <span style={styles.optionIconSmall}>{entity.icon}</span>
-                          <span style={styles.optionLabelSmall}>{entity.label}</span>
-                          {formData.recipientEntity === entity.id && (
-                            <div style={styles.selectedCheckSmall}>✓</div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div style={styles.sectionBlock}>
-                    <h3 style={styles.sectionLabel}>
-                      <span style={styles.sectionIcon}>🎯</span>
-                      الغاية من المستند
-                    </h3>
-                    <div style={styles.optionsGridSmall}>
-                      {documentPurposes.map((purpose) => (
-                        <div
-                          key={purpose.id}
-                          className="option-card"
-                          style={{
-                            ...styles.optionCardSmall,
-                            ...(formData.documentPurpose === purpose.id ? styles.optionCardSelected : {})
-                          }}
-                          onClick={() => handleInputChange('documentPurpose', purpose.id)}
-                        >
-                          <span style={styles.optionIconSmall}>{purpose.icon}</span>
-                          <span style={styles.optionLabelSmall}>{purpose.label}</span>
-                          {formData.documentPurpose === purpose.id && (
-                            <div style={styles.selectedCheckSmall}>✓</div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Personal Information */}
-              {currentStep === 3 && (
                 <div style={styles.stepContent}>
                   <h2 style={styles.stepHeading}>البيانات الشخصية</h2>
                   <p style={styles.stepDescription}>أدخل بياناتك الشخصية للتواصل</p>
@@ -553,8 +473,8 @@ const OfficialDocumentRequest = () => {
                 </div>
               )}
 
-              {/* Step 4: Request Details */}
-              {currentStep === 4 && (
+              {/* Step 3: Request Details */}
+              {currentStep === 3 && (
                 <div style={styles.stepContent}>
                   <h2 style={styles.stepHeading}>تفاصيل الطلب</h2>
                   <p style={styles.stepDescription}>اشرح موضوع طلبك وأرفق المستندات الداعمة إن وُجدت</p>
@@ -641,8 +561,8 @@ const OfficialDocumentRequest = () => {
                 </div>
               )}
 
-              {/* Step 5: Review */}
-              {currentStep === 5 && (
+              {/* Step 4: Review */}
+              {currentStep === 4 && (
                 <div style={styles.stepContent}>
                   <h2 style={styles.stepHeading}>مراجعة الطلب</h2>
                   <p style={styles.stepDescription}>راجع جميع المعلومات قبل الإرسال</p>
@@ -659,18 +579,6 @@ const OfficialDocumentRequest = () => {
                           <span style={styles.reviewLabel}>نوع المستند</span>
                           <span style={styles.reviewValue}>
                             {getSelectedLabel(documentTypes, formData.documentType)}
-                          </span>
-                        </div>
-                        <div style={styles.reviewItem}>
-                          <span style={styles.reviewLabel}>الجهة الموجّه إليها</span>
-                          <span style={styles.reviewValue}>
-                            {getSelectedLabel(recipientEntities, formData.recipientEntity)}
-                          </span>
-                        </div>
-                        <div style={styles.reviewItem}>
-                          <span style={styles.reviewLabel}>الغاية</span>
-                          <span style={styles.reviewValue}>
-                            {getSelectedLabel(documentPurposes, formData.documentPurpose)}
                           </span>
                         </div>
                       </div>
@@ -756,7 +664,7 @@ const OfficialDocumentRequest = () => {
                   </button>
                 )}
                 
-                {currentStep < 5 ? (
+                {currentStep < 4 ? (
                   <button
                     className="btn-primary"
                     style={{
