@@ -778,7 +778,24 @@ app.get('/api/admin/protocols/all', adminAuth, async (req, res) => {
 // Add new protocol (admin)
 app.post('/api/admin/protocols/add', adminAuth, upload.single('file'), async (req, res) => {
   try {
-    const protocolData = JSON.parse(req.body.protocolData);
+    console.log('Protocol add request body:', req.body);
+
+    // Handle both JSON string and direct fields
+    let protocolData;
+    if (req.body.protocolData) {
+      protocolData = JSON.parse(req.body.protocolData);
+    } else {
+      // Fallback: read fields directly
+      protocolData = {
+        title: req.body.title,
+        titleHe: req.body.titleHe,
+        meetingDate: req.body.meetingDate,
+        meetingNumber: req.body.meetingNumber,
+        description: req.body.description,
+        descriptionHe: req.body.descriptionHe,
+        status: req.body.status
+      };
+    }
 
     let fileData = null;
     if (req.file) {
@@ -816,7 +833,23 @@ app.post('/api/admin/protocols/add', adminAuth, upload.single('file'), async (re
 app.put('/api/admin/protocols/:id', adminAuth, upload.single('file'), async (req, res) => {
   try {
     const { id } = req.params;
-    const protocolData = JSON.parse(req.body.protocolData);
+    console.log('Protocol update request body:', req.body);
+
+    // Handle both JSON string and direct fields
+    let protocolData;
+    if (req.body.protocolData) {
+      protocolData = JSON.parse(req.body.protocolData);
+    } else {
+      protocolData = {
+        title: req.body.title,
+        titleHe: req.body.titleHe,
+        meetingDate: req.body.meetingDate,
+        meetingNumber: req.body.meetingNumber,
+        description: req.body.description,
+        descriptionHe: req.body.descriptionHe,
+        status: req.body.status
+      };
+    }
 
     const protocol = await Protocol.findById(id);
     if (!protocol) {
