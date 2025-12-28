@@ -26,15 +26,8 @@ const logVisit = async (page) => {
 
 function App() {
   const [currentView, setCurrentView] = useState('home');
-  const [hoveredCard, setHoveredCard] = useState(null);
   const [secretCode, setSecretCode] = useState('');
   const [showAdminPrompt, setShowAdminPrompt] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  // Initial load animation
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
 
   // Log page visits
   useEffect(() => {
@@ -60,962 +53,586 @@ function App() {
     {
       id: 'eligibility',
       icon: '✓',
-      emoji: '🔍',
       titleHe: 'בדיקת זכאות',
       titleAr: 'فحص الاستحقاق',
-      desc: 'בדוק זכאות לאישור תושב',
-      color: '#10b981',
-      gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+      descHe: 'בדוק זכאות לאישור תושב',
+      descAr: 'تحقق من أهليتك للحصول على شهادة السكن'
     },
     {
       id: 'certificate',
-      icon: '⬇',
-      emoji: '📄',
+      icon: '📄',
       titleHe: 'אישור תושבות',
       titleAr: 'شهادة السكن',
-      desc: 'הורדת אישור מיידית',
-      color: '#3b82f6',
-      gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+      descHe: 'הורדת אישור מיידית',
+      descAr: 'تحميل شهادة السكن الرسمية'
     },
     {
       id: 'documentAuth',
-      icon: '✓',
-      emoji: '✅',
+      icon: '✔',
       titleHe: 'אימות מסמכים',
       titleAr: 'مصادقة المستندات',
-      desc: 'אימות רשמי של מסמכים',
-      color: '#8b5cf6',
-      gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
+      descHe: 'אימות רשמי של מסמכים',
+      descAr: 'طلب مصادقة رسمية على المستندات'
     },
     {
       id: 'tenders',
-      icon: '☰',
-      emoji: '📋',
+      icon: '📋',
       titleHe: 'מכרזים',
       titleAr: 'المناقصات',
-      desc: 'צפייה והגשת הצעות',
-      color: '#f59e0b',
-      gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+      descHe: 'צפייה במכרזים פעילים',
+      descAr: 'عرض المناقصات النشطة'
     },
     {
       id: 'officialDoc',
-      icon: '✎',
-      emoji: '📝',
+      icon: '📝',
       titleHe: 'מסמך רשמי',
       titleAr: 'مستند رسمي',
-      desc: 'בקשה להכנת מסמך',
-      color: '#ec4899',
-      gradient: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)'
+      descHe: 'בקשה להכנת מסמך',
+      descAr: 'طلب إعداد مستند رسمي'
     },
     {
       id: 'tracker',
       icon: '🔍',
-      emoji: '📍',
       titleHe: 'מעקב בקשות',
       titleAr: 'تتبع الطلبات',
-      desc: 'מעקב אחר סטטוס הבקשה',
-      color: '#06b6d4',
-      gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+      descHe: 'מעקב אחר סטטוס הבקשה',
+      descAr: 'تتبع حالة طلبك'
     }
   ];
+
+  const styles = {
+    container: {
+      minHeight: '100vh',
+      background: '#edf2f7',
+      fontFamily: "'Segoe UI', 'Arial', sans-serif",
+      direction: 'rtl'
+    },
+    headerStripe: {
+      height: '6px',
+      background: 'linear-gradient(90deg, #1a365d 0%, #234e70 50%, #2b6cb0 100%)'
+    },
+    header: {
+      background: '#ffffff',
+      borderBottom: '1px solid #e2e8f0',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.04)'
+    },
+    headerContent: {
+      maxWidth: '1100px',
+      margin: '0 auto',
+      padding: '16px 24px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: '20px'
+    },
+    logoSection: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '16px'
+    },
+    emblem: {
+      width: '56px',
+      height: '56px',
+      background: 'linear-gradient(135deg, #1a365d 0%, #234e70 100%)',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: '#ffffff',
+      fontSize: '20px',
+      fontWeight: 'bold',
+      border: '3px solid #b7791f',
+      flexShrink: 0
+    },
+    titleSection: {
+      textAlign: 'right'
+    },
+    titleAr: {
+      fontSize: '1.35rem',
+      fontWeight: '700',
+      color: '#1a365d',
+      margin: 0,
+      lineHeight: 1.3
+    },
+    titleHe: {
+      fontSize: '0.95rem',
+      color: '#4a5568',
+      margin: 0
+    },
+    nav: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px'
+    },
+    navBadge: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '6px',
+      padding: '8px 14px',
+      background: '#c6f6d5',
+      border: '1px solid #276749',
+      borderRadius: '20px',
+      fontSize: '0.8rem',
+      fontWeight: '600',
+      color: '#276749'
+    },
+    main: {
+      maxWidth: '1100px',
+      margin: '0 auto',
+      padding: '40px 24px 60px'
+    },
+    welcomeSection: {
+      textAlign: 'center',
+      marginBottom: '40px'
+    },
+    welcomeTitle: {
+      fontSize: '1.75rem',
+      fontWeight: '700',
+      color: '#1a365d',
+      margin: '0 0 8px 0'
+    },
+    welcomeSubtitle: {
+      fontSize: '1rem',
+      color: '#4a5568',
+      margin: 0
+    },
+    infoBox: {
+      background: '#ffffff',
+      border: '1px solid #e2e8f0',
+      borderRight: '4px solid #1a365d',
+      borderRadius: '6px',
+      padding: '16px 20px',
+      marginBottom: '32px',
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: '12px'
+    },
+    infoIcon: {
+      fontSize: '20px',
+      color: '#1a365d'
+    },
+    infoText: {
+      fontSize: '0.9rem',
+      color: '#4a5568',
+      margin: 0,
+      lineHeight: 1.6
+    },
+    servicesGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+      gap: '20px'
+    },
+    serviceCard: {
+      background: '#ffffff',
+      border: '1px solid #e2e8f0',
+      borderRadius: '6px',
+      padding: '24px',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      position: 'relative',
+      overflow: 'hidden'
+    },
+    serviceCardHover: {
+      borderColor: '#2b6cb0',
+      boxShadow: '0 4px 12px rgba(43, 108, 176, 0.15)',
+      transform: 'translateY(-2px)'
+    },
+    serviceCardTop: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '3px',
+      background: '#1a365d'
+    },
+    serviceHeader: {
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: '16px',
+      marginBottom: '12px'
+    },
+    serviceIcon: {
+      width: '48px',
+      height: '48px',
+      background: '#edf2f7',
+      borderRadius: '8px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '22px',
+      border: '1px solid #e2e8f0',
+      flexShrink: 0
+    },
+    serviceTitles: {
+      flex: 1
+    },
+    serviceTitleHe: {
+      fontSize: '1.1rem',
+      fontWeight: '600',
+      color: '#1a365d',
+      margin: '0 0 2px 0'
+    },
+    serviceTitleAr: {
+      fontSize: '0.95rem',
+      color: '#4a5568',
+      margin: 0
+    },
+    serviceDesc: {
+      fontSize: '0.85rem',
+      color: '#718096',
+      margin: 0,
+      lineHeight: 1.5
+    },
+    serviceArrow: {
+      position: 'absolute',
+      left: '20px',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      fontSize: '18px',
+      color: '#a0aec0',
+      transition: 'all 0.2s ease'
+    },
+    footer: {
+      background: '#1a365d',
+      color: '#ffffff',
+      padding: '32px 24px',
+      marginTop: 'auto'
+    },
+    footerContent: {
+      maxWidth: '1100px',
+      margin: '0 auto',
+      textAlign: 'center'
+    },
+    footerDivider: {
+      width: '50px',
+      height: '3px',
+      background: '#b7791f',
+      margin: '0 auto 16px'
+    },
+    footerTitle: {
+      fontSize: '1rem',
+      fontWeight: '600',
+      margin: '0 0 8px 0'
+    },
+    footerText: {
+      fontSize: '0.85rem',
+      opacity: 0.8,
+      margin: 0
+    },
+    modalOverlay: {
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(26, 54, 93, 0.7)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: '24px',
+      backdropFilter: 'blur(4px)'
+    },
+    modal: {
+      background: '#ffffff',
+      borderRadius: '8px',
+      width: '100%',
+      maxWidth: '400px',
+      boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+      overflow: 'hidden'
+    },
+    modalHeader: {
+      background: 'linear-gradient(135deg, #1a365d 0%, #234e70 100%)',
+      color: '#ffffff',
+      padding: '20px 24px',
+      borderBottom: '3px solid #b7791f',
+      textAlign: 'center'
+    },
+    modalTitle: {
+      fontSize: '1.1rem',
+      fontWeight: '600',
+      margin: 0
+    },
+    modalBody: {
+      padding: '24px'
+    },
+    modalInput: {
+      width: '100%',
+      padding: '14px 18px',
+      fontSize: '1.25rem',
+      border: '2px solid #e2e8f0',
+      borderRadius: '6px',
+      textAlign: 'center',
+      fontFamily: 'monospace',
+      letterSpacing: '6px',
+      marginBottom: '16px',
+      transition: 'all 0.2s ease',
+      outline: 'none'
+    },
+    modalBtn: {
+      width: '100%',
+      padding: '12px',
+      background: '#edf2f7',
+      border: 'none',
+      borderRadius: '6px',
+      fontSize: '0.95rem',
+      fontWeight: '600',
+      color: '#4a5568',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease'
+    },
+    backButton: {
+      position: 'fixed',
+      top: '20px',
+      right: '20px',
+      zIndex: 1000,
+      padding: '12px 20px',
+      background: 'linear-gradient(135deg, #1a365d 0%, #234e70 100%)',
+      border: 'none',
+      borderRadius: '6px',
+      fontSize: '0.9rem',
+      fontWeight: '600',
+      color: '#ffffff',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      boxShadow: '0 4px 12px rgba(26, 54, 93, 0.3)',
+      transition: 'all 0.2s ease'
+    }
+  };
 
   const BackButton = () => (
     <button
       onClick={() => setCurrentView('home')}
-      className="back-button"
-      style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        zIndex: 1000,
-        padding: '14px 28px',
-        background: 'linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%)',
-        border: 'none',
-        borderRadius: '16px',
-        fontSize: '15px',
-        fontWeight: '700',
-        color: '#fff',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
-        fontFamily: 'inherit',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        boxShadow: '0 10px 30px rgba(26, 54, 93, 0.4)'
-      }}
+      style={styles.backButton}
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
-        e.currentTarget.style.boxShadow = '0 15px 40px rgba(26, 54, 93, 0.5)';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = '0 6px 16px rgba(26, 54, 93, 0.4)';
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0) scale(1)';
-        e.currentTarget.style.boxShadow = '0 10px 30px rgba(26, 54, 93, 0.4)';
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(26, 54, 93, 0.3)';
       }}
     >
-      <span style={{ fontSize: '18px' }}>←</span>
+      <span>←</span>
       <span>חזרה לתפריט</span>
     </button>
   );
 
-  // Handle page navigation with smooth transition
   const navigateTo = (view) => {
     setCurrentView(view);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Home Page
   if (currentView === 'home') {
     return (
-      <div
-        dir="rtl"
-        style={{
-          minHeight: '100vh',
-          background: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)',
-          fontFamily: "'Tajawal', 'Segoe UI', sans-serif",
-          overflowX: 'hidden',
-          position: 'relative'
-        }}
-      >
-        <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;600;700;800;900&display=swap');
+      <div style={styles.container}>
+        {/* Header Stripe */}
+        <div style={styles.headerStripe} />
 
-          /* Hero Animations */
-          @keyframes heroGradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-
-          @keyframes floatParticle {
-            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.6; }
-            50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
-          }
-
-          @keyframes slideInDown {
-            from { opacity: 0; transform: translateY(-40px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-
-          @keyframes slideInUp {
-            from { opacity: 0; transform: translateY(40px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-
-          @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-          }
-
-          @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 20px rgba(72, 187, 120, 0.4); }
-            50% { box-shadow: 0 0 40px rgba(72, 187, 120, 0.8); }
-          }
-
-          @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-          }
-
-          @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-          }
-
-          .hero-section {
-            background: linear-gradient(-45deg, #0c1929, #1a365d, #2c5282, #1e3a5f);
-            background-size: 400% 400%;
-            animation: heroGradient 15s ease infinite;
-          }
-
-          .hero-badge {
-            animation: slideInDown 0.8s ease-out 0.2s both;
-          }
-
-          .hero-title {
-            animation: slideInDown 0.8s ease-out 0.4s both;
-          }
-
-          .hero-subtitle {
-            animation: slideInDown 0.8s ease-out 0.6s both;
-          }
-
-          .hero-cta {
-            animation: slideInUp 0.8s ease-out 0.8s both;
-          }
-
-          .section-header {
-            animation: slideInUp 0.6s ease-out 0.2s both;
-          }
-
-          .service-card {
-            opacity: 0;
-            animation: cardEntrance 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-          }
-
-          @keyframes cardEntrance {
-            from {
-              opacity: 0;
-              transform: translateY(40px) scale(0.95);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0) scale(1);
-            }
-          }
-
-          .service-card:nth-child(1) { animation-delay: 0.1s; }
-          .service-card:nth-child(2) { animation-delay: 0.15s; }
-          .service-card:nth-child(3) { animation-delay: 0.2s; }
-          .service-card:nth-child(4) { animation-delay: 0.25s; }
-          .service-card:nth-child(5) { animation-delay: 0.3s; }
-          .service-card:nth-child(6) { animation-delay: 0.35s; }
-
-          .service-card:hover {
-            transform: translateY(-12px) scale(1.02) !important;
-          }
-
-          .service-card:active {
-            transform: scale(0.98) !important;
-          }
-
-          .card-icon {
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-          }
-
-          .service-card:hover .card-icon {
-            transform: scale(1.1) rotate(5deg);
-          }
-
-          .card-arrow {
-            transition: all 0.3s ease;
-          }
-
-          .service-card:hover .card-arrow {
-            transform: translateX(-8px);
-            background: var(--card-color) !important;
-            color: white !important;
-          }
-
-          .footer-stat {
-            animation: slideInUp 0.6s ease-out backwards;
-          }
-
-          .footer-stat:nth-child(1) { animation-delay: 0.6s; }
-          .footer-stat:nth-child(2) { animation-delay: 0.7s; }
-          .footer-stat:nth-child(3) { animation-delay: 0.8s; }
-
-          .scroll-indicator {
-            animation: bounce 2s ease-in-out infinite;
-          }
-
-          /* Responsive Adjustments */
-          @media (max-width: 768px) {
-            .service-card {
-              animation-duration: 0.4s;
-            }
-            .service-card:nth-child(1) { animation-delay: 0.05s; }
-            .service-card:nth-child(2) { animation-delay: 0.1s; }
-            .service-card:nth-child(3) { animation-delay: 0.15s; }
-            .service-card:nth-child(4) { animation-delay: 0.2s; }
-            .service-card:nth-child(5) { animation-delay: 0.25s; }
-            .service-card:nth-child(6) { animation-delay: 0.3s; }
-          }
-
-          /* Floating Particles */
-          .particle {
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-            animation: floatParticle 4s ease-in-out infinite;
-          }
-
-          /* Glowing Status Dot */
-          .status-dot {
-            animation: pulseGlow 2s ease-in-out infinite;
-          }
-
-          /* Shimmer Effect on Cards */
-          .shimmer-effect {
-            position: relative;
-            overflow: hidden;
-          }
-
-          .shimmer-effect::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(
-              to right,
-              transparent 0%,
-              rgba(255, 255, 255, 0.1) 50%,
-              transparent 100%
-            );
-            transform: rotate(30deg);
-            animation: shimmer 4s infinite;
-            pointer-events: none;
-          }
-        `}</style>
-
-        {/* Decorative Background Blobs */}
-        <div style={{
-          position: 'fixed',
-          top: '10%',
-          right: '-10%',
-          width: '400px',
-          height: '400px',
-          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)',
-          borderRadius: '50%',
-          filter: 'blur(60px)',
-          pointerEvents: 'none',
-          zIndex: 0
-        }} />
-        <div style={{
-          position: 'fixed',
-          bottom: '20%',
-          left: '-10%',
-          width: '350px',
-          height: '350px',
-          background: 'radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%)',
-          borderRadius: '50%',
-          filter: 'blur(60px)',
-          pointerEvents: 'none',
-          zIndex: 0
-        }} />
-
-        {/* Admin Login Modal */}
-        {showAdminPrompt && (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0,0,0,0.7)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 9999,
-              backdropFilter: 'blur(8px)',
-              animation: 'fadeIn 0.3s ease-out'
-            }}
-            onClick={() => setShowAdminPrompt(false)}
-          >
-            <div
-              style={{
-                background: 'white',
-                padding: '40px',
-                borderRadius: '24px',
-                textAlign: 'center',
-                boxShadow: '0 25px 80px rgba(0,0,0,0.4)',
-                animation: 'scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                maxWidth: '90%',
-                width: '360px'
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div style={{
-                width: '70px',
-                height: '70px',
-                background: 'linear-gradient(135deg, #1e3a5f 0%, #3b82f6 100%)',
-                borderRadius: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 24px',
-                fontSize: '32px'
-              }}>
-                🔐
+        {/* Header */}
+        <header style={styles.header}>
+          <div style={styles.headerContent}>
+            <div style={styles.logoSection}>
+              <div style={styles.emblem}>ح</div>
+              <div style={styles.titleSection}>
+                <h1 style={styles.titleAr}>اللجنة المحلية - الحسينية</h1>
+                <p style={styles.titleHe}>הוועדה המקומית חוסניה</p>
               </div>
-              <h3 style={{
-                margin: '0 0 8px 0',
-                color: '#1a365d',
-                fontSize: '24px',
-                fontWeight: '800'
-              }}>
-                כניסת מנהל
-              </h3>
-              <p style={{
-                margin: '0 0 24px 0',
-                color: '#718096',
-                fontSize: '14px'
-              }}>
-                הזן את הסיסמה כדי להמשיך
-              </p>
-              <input
-                type="password"
-                placeholder="••••"
-                autoFocus
-                style={{
-                  padding: '16px 24px',
-                  fontSize: '24px',
-                  border: '3px solid #e2e8f0',
-                  borderRadius: '16px',
-                  width: '100%',
-                  textAlign: 'center',
-                  marginBottom: '20px',
-                  fontFamily: 'monospace',
-                  letterSpacing: '8px',
-                  transition: 'all 0.3s ease',
-                  outline: 'none'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#3b82f6';
-                  e.target.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.1)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e2e8f0';
-                  e.target.style.boxShadow = 'none';
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    if (e.target.value === '5587') {
-                      setCurrentView('admin');
-                      setShowAdminPrompt(false);
-                    } else {
-                      e.target.value = '';
-                      e.target.style.borderColor = '#ef4444';
-                      e.target.style.animation = 'shake 0.5s ease-in-out';
-                      setTimeout(() => {
-                        e.target.style.borderColor = '#e2e8f0';
-                        e.target.style.animation = '';
-                      }, 500);
-                    }
-                  } else if (e.key === 'Escape') {
-                    setShowAdminPrompt(false);
-                  }
-                }}
-              />
-              <button
-                onClick={() => setShowAdminPrompt(false)}
-                style={{
-                  padding: '14px 32px',
-                  background: '#f1f5f9',
-                  border: 'none',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '15px',
-                  color: '#64748b',
-                  transition: 'all 0.3s ease',
-                  fontFamily: 'inherit'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = '#e2e8f0';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = '#f1f5f9';
-                }}
-              >
-                ביטול
-              </button>
             </div>
-          </div>
-        )}
-
-        {/* Hero Section */}
-        <header
-          className="hero-section"
-          style={{
-            padding: '60px 24px 80px',
-            textAlign: 'center',
-            position: 'relative',
-            overflow: 'hidden'
-          }}
-        >
-          {/* Floating Particles */}
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="particle"
-              style={{
-                width: `${8 + i * 4}px`,
-                height: `${8 + i * 4}px`,
-                background: 'rgba(255,255,255,0.3)',
-                top: `${20 + i * 12}%`,
-                left: `${10 + i * 15}%`,
-                animationDelay: `${i * 0.5}s`,
-                animationDuration: `${3 + i}s`
-              }}
-            />
-          ))}
-
-          {/* Decorative Pattern Overlay */}
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            opacity: 0.03,
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M50 50c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10s-10-4.477-10-10 4.477-10 10-10zM10 10c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10S0 25.523 0 20s4.477-10 10-10zm10 8c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8zm40 40c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            pointerEvents: 'none'
-          }} />
-
-          {/* Status Badge */}
-          <div
-            className="hero-badge"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '14px 28px',
-              background: 'rgba(255,255,255,0.1)',
-              borderRadius: '50px',
-              border: '1px solid rgba(255,255,255,0.2)',
-              backdropFilter: 'blur(10px)',
-              marginBottom: '32px'
-            }}
-          >
-            <div
-              className="status-dot"
-              style={{
-                width: '10px',
-                height: '10px',
-                background: '#48bb78',
-                borderRadius: '50%'
-              }}
-            />
-            <span style={{ color: '#fff', fontSize: '15px', fontWeight: '600' }}>
-              منظومة الخدمات الإلكترونية | מערכת שירותים דיגיטליים
-            </span>
-          </div>
-
-          {/* Main Title */}
-          <h1
-            className="hero-title"
-            style={{
-              fontSize: 'clamp(32px, 6vw, 52px)',
-              fontWeight: '900',
-              color: '#fff',
-              margin: '0 0 16px 0',
-              lineHeight: 1.2,
-              textShadow: '0 4px 20px rgba(0,0,0,0.3)'
-            }}
-          >
-            اللجنة المحلية - الحسينية
-          </h1>
-
-          <p
-            className="hero-subtitle"
-            style={{
-              fontSize: 'clamp(16px, 3vw, 20px)',
-              color: 'rgba(255,255,255,0.85)',
-              margin: '0 0 40px 0',
-              maxWidth: '600px',
-              marginLeft: 'auto',
-              marginRight: 'auto'
-            }}
-          >
-            הוועדה המקומית חוסניה | خدمات حكومية رسمية إلكترونية
-          </p>
-
-          {/* CTA Button */}
-          <div className="hero-cta">
-            <button
-              onClick={() => document.getElementById('services-section').scrollIntoView({ behavior: 'smooth' })}
-              className="scroll-indicator"
-              style={{
-                background: 'rgba(255,255,255,0.15)',
-                border: '2px solid rgba(255,255,255,0.3)',
-                borderRadius: '50px',
-                padding: '16px 40px',
-                color: '#fff',
-                fontSize: '16px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '12px',
-                fontFamily: 'inherit',
-                transition: 'all 0.3s ease',
-                backdropFilter: 'blur(10px)'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.background = 'rgba(255,255,255,0.25)';
-                e.target.style.transform = 'translateY(-3px)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.background = 'rgba(255,255,255,0.15)';
-                e.target.style.transform = 'translateY(0)';
-              }}
-            >
-              <span>استكشف الخدمات</span>
-              <span style={{ fontSize: '20px' }}>↓</span>
-            </button>
+            <nav style={styles.nav}>
+              <div style={styles.navBadge}>
+                <span style={{ width: '8px', height: '8px', background: '#276749', borderRadius: '50%' }} />
+                <span>الخدمات متاحة</span>
+              </div>
+            </nav>
           </div>
         </header>
 
-        {/* Services Section */}
-        <main
-          id="services-section"
-          style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            padding: '60px 24px 80px',
-            position: 'relative',
-            zIndex: 1
-          }}
-        >
-          {/* Section Header */}
-          <div className="section-header" style={{ textAlign: 'center', marginBottom: '50px' }}>
-            <span style={{
-              display: 'inline-block',
-              padding: '8px 20px',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-              color: '#fff',
-              borderRadius: '50px',
-              fontSize: '13px',
-              fontWeight: '700',
-              marginBottom: '16px',
-              letterSpacing: '1px'
-            }}>
-              خدماتنا
-            </span>
-            <h2 style={{
-              fontSize: 'clamp(28px, 5vw, 40px)',
-              fontWeight: '900',
-              color: '#1a365d',
-              margin: '0 0 12px 0'
-            }}>
-              الخدمات الإلكترونية المتاحة
-            </h2>
-            <p style={{
-              fontSize: '17px',
-              color: '#64748b',
-              margin: 0,
-              maxWidth: '500px',
-              marginLeft: 'auto',
-              marginRight: 'auto'
-            }}>
-              اختر الخدمة التي تحتاجها من القائمة أدناه
+        {/* Main Content */}
+        <main style={styles.main}>
+          {/* Welcome Section */}
+          <div style={styles.welcomeSection}>
+            <h2 style={styles.welcomeTitle}>الخدمات الإلكترونية الرسمية</h2>
+            <p style={styles.welcomeSubtitle}>שירותים דיגיטליים רשמיים | بوابة الخدمات الحكومية</p>
+          </div>
+
+          {/* Info Box */}
+          <div style={styles.infoBox}>
+            <span style={styles.infoIcon}>ℹ</span>
+            <p style={styles.infoText}>
+              مرحباً بكم في بوابة الخدمات الإلكترونية الرسمية للجنة المحلية الحسينية.
+              جميع الخدمات متاحة على مدار الساعة.
+              <br />
+              <span style={{ color: '#718096' }}>
+                ברוכים הבאים לפורטל השירותים הדיגיטליים הרשמי של הוועדה המקומית חוסניה.
+              </span>
             </p>
           </div>
 
           {/* Services Grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-            gap: '24px'
-          }}>
-            {services.map((service, index) => {
-              const isHovered = hoveredCard === service.id;
-
-              return (
-                <div
-                  key={service.id}
-                  className="service-card shimmer-effect"
-                  onClick={() => navigateTo(service.id)}
-                  onMouseEnter={() => setHoveredCard(service.id)}
-                  onMouseLeave={() => setHoveredCard(null)}
-                  style={{
-                    '--card-color': service.color,
-                    background: '#fff',
-                    borderRadius: '24px',
-                    padding: '32px',
-                    cursor: 'pointer',
-                    border: '2px solid',
-                    borderColor: isHovered ? service.color : '#e2e8f0',
-                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                    boxShadow: isHovered
-                      ? `0 25px 50px -12px ${service.color}40`
-                      : '0 4px 20px rgba(0,0,0,0.06)',
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '24px',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}
-                >
-                  {/* Background Gradient on Hover */}
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: service.gradient,
-                    opacity: isHovered ? 0.03 : 0,
-                    transition: 'opacity 0.4s ease',
-                    pointerEvents: 'none'
-                  }} />
-
-                  {/* Number Badge */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '20px',
-                    left: '20px',
-                    fontSize: '13px',
-                    fontWeight: '900',
-                    color: isHovered ? service.color : '#cbd5e0',
-                    transition: 'color 0.3s ease'
-                  }}>
-                    0{index + 1}
-                  </div>
-
-                  {/* Icon Container */}
-                  <div
-                    className="card-icon"
-                    style={{
-                      width: '72px',
-                      height: '72px',
-                      background: isHovered ? service.gradient : '#f1f5f9',
-                      borderRadius: '20px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '32px',
-                      flexShrink: 0,
-                      boxShadow: isHovered ? `0 10px 30px ${service.color}30` : 'none',
-                      transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                    }}
-                  >
-                    {service.emoji}
-                  </div>
-
-                  {/* Content */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <h3 style={{
-                      fontSize: '22px',
-                      fontWeight: '800',
-                      color: '#1a365d',
-                      margin: '0 0 6px 0',
-                      transition: 'color 0.3s ease'
-                    }}>
-                      {service.titleHe}
-                    </h3>
-                    <p style={{
-                      fontSize: '17px',
-                      color: isHovered ? service.color : '#4a5568',
-                      margin: '0 0 10px 0',
-                      fontWeight: '600',
-                      transition: 'color 0.3s ease'
-                    }}>
-                      {service.titleAr}
-                    </p>
-                    <p style={{
-                      fontSize: '14px',
-                      color: '#94a3b8',
-                      margin: 0,
-                      lineHeight: 1.5
-                    }}>
-                      {service.desc}
-                    </p>
-                  </div>
-
-                  {/* Arrow Button */}
-                  <div
-                    className="card-arrow"
-                    style={{
-                      width: '48px',
-                      height: '48px',
-                      background: '#f1f5f9',
-                      borderRadius: '14px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#64748b',
-                      fontSize: '22px',
-                      alignSelf: 'center',
-                      flexShrink: 0
-                    }}
-                  >
-                    ←
+          <div style={styles.servicesGrid}>
+            {services.map((service) => (
+              <div
+                key={service.id}
+                style={styles.serviceCard}
+                onClick={() => navigateTo(service.id)}
+                onMouseEnter={(e) => {
+                  Object.assign(e.currentTarget.style, styles.serviceCardHover);
+                  e.currentTarget.querySelector('.arrow').style.color = '#2b6cb0';
+                  e.currentTarget.querySelector('.arrow').style.transform = 'translateY(-50%) translateX(-4px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#e2e8f0';
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.querySelector('.arrow').style.color = '#a0aec0';
+                  e.currentTarget.querySelector('.arrow').style.transform = 'translateY(-50%)';
+                }}
+              >
+                <div style={styles.serviceCardTop} />
+                <div style={styles.serviceHeader}>
+                  <div style={styles.serviceIcon}>{service.icon}</div>
+                  <div style={styles.serviceTitles}>
+                    <h3 style={styles.serviceTitleHe}>{service.titleHe}</h3>
+                    <p style={styles.serviceTitleAr}>{service.titleAr}</p>
                   </div>
                 </div>
-              );
-            })}
+                <p style={styles.serviceDesc}>
+                  {service.descAr}
+                  <br />
+                  <span style={{ color: '#a0aec0' }}>{service.descHe}</span>
+                </p>
+                <span className="arrow" style={styles.serviceArrow}>←</span>
+              </div>
+            ))}
           </div>
         </main>
 
-        {/* Mobile Admin Access Button */}
+        {/* Footer */}
+        <footer style={styles.footer}>
+          <div style={styles.footerContent}>
+            <div style={styles.footerDivider} />
+            <h3 style={styles.footerTitle}>اللجنة المحلية - الحسينية</h3>
+            <p style={styles.footerText}>
+              הוועדה המקומית חוסניה | جميع الحقوق محفوظة © {new Date().getFullYear()}
+            </p>
+          </div>
+        </footer>
+
+        {/* Admin Access Button */}
         <div
           onClick={() => setShowAdminPrompt(true)}
           style={{
             position: 'fixed',
-            bottom: '24px',
-            left: '24px',
-            width: '50px',
-            height: '50px',
-            background: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: '16px',
+            bottom: '20px',
+            left: '20px',
+            width: '44px',
+            height: '44px',
+            background: '#ffffff',
+            borderRadius: '8px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
             zIndex: 1000,
-            transition: 'all 0.3s ease',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-            border: '1px solid rgba(0,0,0,0.05)',
-            backdropFilter: 'blur(10px)'
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            border: '1px solid #e2e8f0',
+            transition: 'all 0.2s ease'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.1)';
-            e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.15)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.1)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
           }}
         >
-          <span style={{ fontSize: '24px' }}>⚙️</span>
+          <span style={{ fontSize: '20px' }}>⚙</span>
         </div>
 
-        {/* Footer */}
-        <footer style={{
-          background: 'linear-gradient(135deg, #0c1929 0%, #1a365d 100%)',
-          padding: '60px 24px',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          {/* Decorative Element */}
-          <div style={{
-            position: 'absolute',
-            top: '-100px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '600px',
-            height: '200px',
-            background: 'radial-gradient(ellipse, rgba(59, 130, 246, 0.15) 0%, transparent 70%)',
-            pointerEvents: 'none'
-          }} />
-
-          <div style={{
-            maxWidth: '900px',
-            margin: '0 auto',
-            textAlign: 'center',
-            position: 'relative',
-            zIndex: 1
-          }}>
-            {/* Stats */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '50px',
-              marginBottom: '40px',
-              flexWrap: 'wrap'
-            }}>
-              {[
-                { value: '24/7', label: 'خدمة متواصلة', labelHe: 'שירות רציף' },
-                { value: '100%', label: 'رسمي وموثوق', labelHe: 'רשמי ומהימן' },
-                { value: '6+', label: 'خدمات إلكترونية', labelHe: 'שירותים דיגיטליים' }
-              ].map((stat, i) => (
-                <div
-                  key={i}
-                  className="footer-stat"
-                  style={{
-                    textAlign: 'center',
-                    padding: '20px 30px',
-                    background: 'rgba(255,255,255,0.05)',
-                    borderRadius: '20px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    backdropFilter: 'blur(10px)',
-                    minWidth: '150px'
+        {/* Admin Login Modal */}
+        {showAdminPrompt && (
+          <div
+            style={styles.modalOverlay}
+            onClick={() => setShowAdminPrompt(false)}
+          >
+            <div
+              style={styles.modal}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={styles.modalHeader}>
+                <h3 style={styles.modalTitle}>כניסת מנהל | دخول المدير</h3>
+              </div>
+              <div style={styles.modalBody}>
+                <input
+                  type="password"
+                  placeholder="••••"
+                  autoFocus
+                  style={styles.modalInput}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#2b6cb0';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(43, 108, 176, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (e.target.value === '5587') {
+                        setCurrentView('admin');
+                        setShowAdminPrompt(false);
+                      } else {
+                        e.target.value = '';
+                        e.target.style.borderColor = '#9b2c2c';
+                      }
+                    } else if (e.key === 'Escape') {
+                      setShowAdminPrompt(false);
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => setShowAdminPrompt(false)}
+                  style={styles.modalBtn}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#e2e8f0';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#edf2f7';
                   }}
                 >
-                  <div style={{
-                    fontSize: '36px',
-                    fontWeight: '900',
-                    color: '#fff',
-                    marginBottom: '8px',
-                    background: 'linear-gradient(135deg, #fff 0%, #a0aec0 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent'
-                  }}>
-                    {stat.value}
-                  </div>
-                  <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '4px' }}>
-                    {stat.label}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>
-                    {stat.labelHe}
-                  </div>
-                </div>
-              ))}
+                  ביטול | إلغاء
+                </button>
+              </div>
             </div>
-
-            {/* Divider */}
-            <div style={{
-              height: '1px',
-              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
-              margin: '0 auto 30px',
-              maxWidth: '400px'
-            }} />
-
-            {/* Copyright */}
-            <p style={{
-              fontSize: '14px',
-              color: '#64748b',
-              margin: 0,
-              lineHeight: 1.8
-            }}>
-              © {new Date().getFullYear()} اللجنة المحلية - الحسينية
-              <br />
-              <span style={{ color: '#4a5568' }}>
-                הוועדה המקומית חוסניה | جميع الحقوق محفوظة
-              </span>
-            </p>
           </div>
-        </footer>
+        )}
       </div>
     );
   }
 
+  // Admin Dashboard
+  if (currentView === 'admin') {
+    return <AdminDashboard />;
+  }
+
+  // Other Views
   const views = {
     eligibility: ResidentEligibilityChecker,
     certificate: ResidentCertificateLookup,
     documentAuth: DocumentAuthenticationRequest,
     tenders: TenderAnnouncements,
     officialDoc: OfficialDocumentRequest,
-    tracker: RequestTracker,
-    admin: AdminDashboard
+    tracker: RequestTracker
   };
-
-  if (currentView === 'admin') {
-    return <AdminDashboard />;
-  }
 
   const ViewComponent = views[currentView];
 
   if (ViewComponent) {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          background: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)',
-          fontFamily: "'Tajawal', 'Segoe UI', sans-serif"
-        }}
-      >
-        <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;600;700;800;900&display=swap');
-
-          @keyframes pageSlideIn {
-            from {
-              opacity: 0;
-              transform: translateY(30px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          .page-content {
-            animation: pageSlideIn 0.5s ease-out;
-          }
-
-          @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-          }
-        `}</style>
+      <div style={styles.container}>
+        <div style={styles.headerStripe} />
         <BackButton />
-        <div className="page-content">
-          <ViewComponent />
-        </div>
+        <ViewComponent />
       </div>
     );
   }
