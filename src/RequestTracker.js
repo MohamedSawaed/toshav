@@ -580,7 +580,7 @@ const RequestTracker = () => {
                         </div>
                       )}
 
-                      {request.adminResponseFile && request.adminResponseFile.url && (
+                      {request.adminResponseFile && (
                         <div style={styles.downloadSection}>
                           <div style={styles.downloadInfo}>
                             <div style={styles.downloadIcon}>📎</div>
@@ -592,7 +592,7 @@ const RequestTracker = () => {
                             </div>
                           </div>
                           <a
-                            href={request.adminResponseFile.url}
+                            href={`${API_URL}/api/submission/${request.id || request._id}/response/download`}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={styles.downloadBtn}
@@ -673,7 +673,7 @@ const RequestTracker = () => {
                         </div>
                       )}
 
-                      {requestData.adminResponseFile && requestData.adminResponseFile.url && (
+                      {requestData.adminResponseFile && (
                         <div style={styles.downloadSection}>
                           <div style={styles.downloadInfo}>
                             <div style={styles.downloadIcon}>📎</div>
@@ -685,7 +685,7 @@ const RequestTracker = () => {
                             </div>
                           </div>
                           <a
-                            href={requestData.adminResponseFile.url}
+                            href={`${API_URL}/api/submission/${requestData.id || requestData._id}/response/download`}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={styles.downloadBtn}

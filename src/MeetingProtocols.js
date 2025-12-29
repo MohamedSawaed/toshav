@@ -35,24 +35,22 @@ const MeetingProtocols = () => {
     return date.toLocaleDateString('he-IL', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  // Handle file download - open Cloudinary URL directly in new tab (v2 - fixed)
+  // Handle file download - use server endpoint to get signed URL
   const handleDownload = (protocol) => {
-    console.log('Download clicked for protocol:', protocol.id || protocol._id);
-    console.log('Protocol file data:', protocol.file);
+    const protocolId = protocol.id || protocol._id;
+    console.log('Download clicked for protocol:', protocolId);
 
-    if (!protocol.file || !protocol.file.url) {
+    if (!protocol.file) {
       alert('لا يوجد ملف للتحميل | אין קובץ להורדה');
       return;
     }
 
-    const protocolId = protocol.id || protocol._id;
-    const fileUrl = protocol.file.url;
-
-    console.log('Opening file URL:', fileUrl);
     setDownloading(protocolId);
 
-    // Open the Cloudinary URL directly in new tab
-    window.open(fileUrl, '_blank');
+    // Use the server download endpoint which generates a signed URL
+    const downloadUrl = `${API_URL}/protocols/${protocolId}/download`;
+    console.log('Opening download URL:', downloadUrl);
+    window.open(downloadUrl, '_blank');
 
     setTimeout(() => setDownloading(null), 1500);
   };

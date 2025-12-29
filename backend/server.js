@@ -24,12 +24,18 @@ const uploadToCloudinary = async (filePath, originalname) => {
     const rawFormats = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.rtf'];
     const isRawFile = rawFormats.includes(ext);
 
+    // Clean the filename - remove non-ASCII characters for better compatibility
+    const cleanFilename = originalname
+      .replace(/\.[^/.]+$/, '') // remove extension
+      .replace(/[^a-zA-Z0-9]/g, '_') // replace non-alphanumeric with underscore
+      .substring(0, 50); // limit length
+
     const uploadOptions = {
       folder: 'husniyya-uploads',
-      public_id: `${Date.now()}-${originalname.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_')}`,
+      public_id: `${Date.now()}-${cleanFilename}`,
       resource_type: isRawFile ? 'raw' : 'auto',
-      // For raw files, preserve the original format
-      ...(isRawFile && { format: ext.slice(1) })
+      access_mode: 'public', // Ensure public access
+      type: 'upload' // Standard upload type (publicly accessible)
     };
 
     console.log('Uploading to Cloudinary with options:', uploadOptions);
@@ -937,14 +943,51 @@ app.delete('/api/admin/protocols/:id', adminAuth, async (req, res) => {
 });
 
 // ===== FILE DOWNLOAD ENDPOINTS =====
-// Helper function to get download URL for Cloudinary files
-const getDownloadUrl = (fileUrl, filename) => {
-  if (!fileUrl) return null;
-
-  // For raw files (PDF, DOC, etc.), the URL already works for download
-  // Just return the original URL - Cloudinary raw files download directly
-  return fileUrl;
+// Helper function to generate signed URL for Cloudinary files
+const getSignedUrl = (publicId, resourceType = 'raw') => {
+  try {
+    // Generate a signed URL that expires in 1 hour
+    const signedUrl = cloudinary.url(publicId, {
+      resource_type: resourceType,
+      type: 'upload',
+      sign_url: true,
+      expires_at: Math.floor(Date.now() / 1000) + 3600 // 1 hour expiry
+    });
+    return signedUrl;
+  } catch (error) {
+    console.error('Error generating signed URL:', error);
+    return null;
+  }
 };
+
+// Download protocol file - generates signed URL and redirects
+app.get('/api/protocols/:id/download', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const protocol = await Protocol.findById(id);
+
+    if (!protocol || !protocol.file) {
+      return res.status(404).json({ error: 'Protocol file not found' });
+    }
+
+    // Try the direct URL first, if it has public_id generate signed URL
+    let downloadUrl = protocol.file.url;
+
+    if (protocol.file.public_id) {
+      // Generate signed URL for raw files
+      const signedUrl = getSignedUrl(protocol.file.public_id, protocol.file.resource_type || 'raw');
+      if (signedUrl) {
+        downloadUrl = signedUrl;
+      }
+    }
+
+    console.log('Redirecting to download URL:', downloadUrl);
+    res.redirect(downloadUrl);
+  } catch (error) {
+    console.error('Protocol download error:', error);
+    res.status(500).json({ error: 'Failed to download protocol file' });
+  }
+});
 
 // Get protocol file info for download
 app.get('/api/protocols/:id/file-info', async (req, res) => {
@@ -956,8 +999,17 @@ app.get('/api/protocols/:id/file-info', async (req, res) => {
       return res.status(404).json({ error: 'Protocol file not found' });
     }
 
+    // Generate signed URL if public_id exists
+    let downloadUrl = protocol.file.url;
+    if (protocol.file.public_id) {
+      const signedUrl = getSignedUrl(protocol.file.public_id, protocol.file.resource_type || 'raw');
+      if (signedUrl) {
+        downloadUrl = signedUrl;
+      }
+    }
+
     res.json({
-      url: protocol.file.url,
+      url: downloadUrl,
       filename: protocol.file.originalname || 'protocol.pdf',
       size: protocol.file.size
     });
@@ -967,7 +1019,63 @@ app.get('/api/protocols/:id/file-info', async (req, res) => {
   }
 });
 
-// Get admin response file info for download
+// Download submission file (attached documents)
+app.get('/api/submission/:id/file/:fileIndex/download', async (req, res) => {
+  try {
+    const { id, fileIndex } = req.params;
+    const submission = await Submission.findById(id);
+
+    if (!submission || !submission.files || !submission.files[fileIndex]) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    const file = submission.files[fileIndex];
+    let downloadUrl = file.url;
+
+    if (file.public_id) {
+      const signedUrl = getSignedUrl(file.public_id, file.resource_type || 'raw');
+      if (signedUrl) {
+        downloadUrl = signedUrl;
+      }
+    }
+
+    console.log('Redirecting to file download:', downloadUrl);
+    res.redirect(downloadUrl);
+  } catch (error) {
+    console.error('Submission file download error:', error);
+    res.status(500).json({ error: 'Failed to download file' });
+  }
+});
+
+// Download admin response file
+app.get('/api/submission/:id/response/download', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const submission = await Submission.findById(id);
+
+    if (!submission || !submission.adminResponseFile) {
+      return res.status(404).json({ error: 'Response file not found' });
+    }
+
+    const file = submission.adminResponseFile;
+    let downloadUrl = file.url;
+
+    if (file.public_id) {
+      const signedUrl = getSignedUrl(file.public_id, file.resource_type || 'raw');
+      if (signedUrl) {
+        downloadUrl = signedUrl;
+      }
+    }
+
+    console.log('Redirecting to response download:', downloadUrl);
+    res.redirect(downloadUrl);
+  } catch (error) {
+    console.error('Response file download error:', error);
+    res.status(500).json({ error: 'Failed to download response file' });
+  }
+});
+
+// Get admin response file info for download (legacy endpoint)
 app.get('/api/submission/:id/response-file-info', async (req, res) => {
   try {
     const { id } = req.params;
@@ -977,8 +1085,17 @@ app.get('/api/submission/:id/response-file-info', async (req, res) => {
       return res.status(404).json({ error: 'Response file not found' });
     }
 
+    // Generate signed URL if public_id exists
+    let downloadUrl = submission.adminResponseFile.url;
+    if (submission.adminResponseFile.public_id) {
+      const signedUrl = getSignedUrl(submission.adminResponseFile.public_id, submission.adminResponseFile.resource_type || 'raw');
+      if (signedUrl) {
+        downloadUrl = signedUrl;
+      }
+    }
+
     res.json({
-      url: submission.adminResponseFile.url,
+      url: downloadUrl,
       filename: submission.adminResponseFile.originalname || 'response.pdf',
       size: submission.adminResponseFile.size
     });

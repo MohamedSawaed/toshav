@@ -417,7 +417,7 @@ const AdminDashboard = () => {
                   <div key={index} style={styles.fileItem}>
                     <span>📎 {file.originalname}</span>
                     <a
-                      href={file.url}
+                      href={`${API_URL}/submission/${selectedSubmission.id}/file/${index}/download`}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: '600' }}
@@ -446,7 +446,7 @@ const AdminDashboard = () => {
                   </div>
                   <div style={styles.responseFileActions}>
                     <a
-                      href={selectedSubmission.adminResponseFile.url}
+                      href={`${API_URL}/submission/${selectedSubmission.id}/response/download`}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={styles.downloadResponseBtn}
@@ -824,11 +824,11 @@ const AdminDashboard = () => {
                   )}
                 </div>
                 {protocol.description && <p style={styles.tenderDesc}>{protocol.description}</p>}
-                {protocol.file && protocol.file.url && (
+                {protocol.file && (
                   <div style={styles.protocolFileInfo}>
                     <span>📎</span>
                     <a
-                      href={protocol.file.url}
+                      href={`${API_URL}/protocols/${protocol.id || protocol._id}/download`}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={styles.protocolFileLink}
