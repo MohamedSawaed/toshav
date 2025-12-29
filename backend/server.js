@@ -5,6 +5,8 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const fs = require('fs');
+const https = require('https');
+const http = require('http');
 const { Resend } = require('resend');
 const cloudinary = require('cloudinary').v2;
 const { connectDB, Submission, Tender, DownloadLog, VisitLog, Protocol } = require('./db');
@@ -943,24 +945,129 @@ app.delete('/api/admin/protocols/:id', adminAuth, async (req, res) => {
 });
 
 // ===== FILE DOWNLOAD ENDPOINTS =====
-// Helper function to generate signed URL for Cloudinary files
-const getSignedUrl = (publicId, resourceType = 'raw') => {
-  try {
-    // Generate a signed URL that expires in 1 hour
-    const signedUrl = cloudinary.url(publicId, {
-      resource_type: resourceType,
-      type: 'upload',
-      sign_url: true,
-      expires_at: Math.floor(Date.now() / 1000) + 3600 // 1 hour expiry
+// Helper function to get authenticated URL from Cloudinary
+const getAuthenticatedCloudinaryUrl = (publicId, resourceType = 'raw') => {
+  // Generate a signed URL using Cloudinary's SDK
+  const timestamp = Math.floor(Date.now() / 1000);
+  const signature = cloudinary.utils.api_sign_request(
+    { public_id: publicId, timestamp: timestamp },
+    process.env.CLOUDINARY_API_SECRET
+  );
+
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  return `https://res.cloudinary.com/${cloudName}/${resourceType}/upload/s--${signature}--/${publicId}`;
+};
+
+// Helper function to stream file from URL through our server
+const streamFileFromUrl = (fileUrl, filename, res) => {
+  return new Promise((resolve, reject) => {
+    const url = new URL(fileUrl);
+    const requestModule = url.protocol === 'https:' ? https : http;
+
+    console.log('Fetching file from:', fileUrl);
+
+    const options = {
+      hostname: url.hostname,
+      port: url.port || (url.protocol === 'https:' ? 443 : 80),
+      path: url.pathname + url.search,
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    };
+
+    const request = requestModule.request(options, (response) => {
+      console.log('Response status:', response.statusCode);
+
+      // Handle redirects
+      if (response.statusCode === 301 || response.statusCode === 302 || response.statusCode === 307) {
+        const redirectUrl = response.headers.location;
+        console.log('Following redirect to:', redirectUrl);
+        streamFileFromUrl(redirectUrl, filename, res).then(resolve).catch(reject);
+        return;
+      }
+
+      // Handle 401 - try with different URL format
+      if (response.statusCode === 401) {
+        console.error('Got 401 Unauthorized - file may need re-upload');
+        reject(new Error('File access denied. The file may need to be re-uploaded.'));
+        return;
+      }
+
+      if (response.statusCode !== 200) {
+        console.error('Failed to fetch file, status:', response.statusCode);
+        reject(new Error(`Failed to fetch file: ${response.statusCode}`));
+        return;
+      }
+
+      // Determine content type
+      const ext = path.extname(filename).toLowerCase();
+      const contentTypes = {
+        '.pdf': 'application/pdf',
+        '.doc': 'application/msword',
+        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        '.xls': 'application/vnd.ms-excel',
+        '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        '.ppt': 'application/vnd.ms-powerpoint',
+        '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        '.txt': 'text/plain',
+        '.rtf': 'application/rtf',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif'
+      };
+
+      const contentType = contentTypes[ext] || response.headers['content-type'] || 'application/octet-stream';
+
+      // Set headers for download
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+
+      if (response.headers['content-length']) {
+        res.setHeader('Content-Length', response.headers['content-length']);
+      }
+
+      // Pipe the response
+      response.pipe(res);
+      response.on('end', () => resolve());
+      response.on('error', (err) => reject(err));
     });
-    return signedUrl;
+
+    request.on('error', (err) => {
+      console.error('Request error:', err);
+      reject(err);
+    });
+
+    request.setTimeout(60000, () => {
+      request.destroy();
+      reject(new Error('Request timeout'));
+    });
+
+    request.end();
+  });
+};
+
+// Helper to download file using Cloudinary API (for restricted files)
+const downloadFromCloudinaryApi = async (publicId, resourceType, filename, res) => {
+  try {
+    // Get file details from Cloudinary
+    const result = await cloudinary.api.resource(publicId, { resource_type: resourceType });
+    console.log('Cloudinary resource:', result);
+
+    // Use the secure_url from API response
+    if (result.secure_url) {
+      await streamFileFromUrl(result.secure_url, filename, res);
+    } else {
+      throw new Error('No URL available for this file');
+    }
   } catch (error) {
-    console.error('Error generating signed URL:', error);
-    return null;
+    console.error('Cloudinary API error:', error);
+    throw error;
   }
 };
 
-// Download protocol file - generates signed URL and redirects
+// Download protocol file - streams file through server with fallback
 app.get('/api/protocols/:id/download', async (req, res) => {
   try {
     const { id } = req.params;
@@ -970,56 +1077,51 @@ app.get('/api/protocols/:id/download', async (req, res) => {
       return res.status(404).json({ error: 'Protocol file not found' });
     }
 
-    // Try the direct URL first, if it has public_id generate signed URL
-    let downloadUrl = protocol.file.url;
+    const filename = protocol.file.originalname || 'protocol.pdf';
+    const publicId = protocol.file.public_id;
+    const resourceType = protocol.file.resource_type || 'raw';
 
-    if (protocol.file.public_id) {
-      // Generate signed URL for raw files
-      const signedUrl = getSignedUrl(protocol.file.public_id, protocol.file.resource_type || 'raw');
-      if (signedUrl) {
-        downloadUrl = signedUrl;
+    console.log('Attempting to download protocol file:', filename);
+    console.log('Public ID:', publicId);
+    console.log('File URL:', protocol.file.url);
+
+    // Try method 1: Direct URL streaming
+    try {
+      if (protocol.file.url) {
+        await streamFileFromUrl(protocol.file.url, filename, res);
+        return;
+      }
+    } catch (directError) {
+      console.log('Direct URL failed:', directError.message);
+    }
+
+    // Try method 2: Cloudinary API (if we have public_id)
+    if (publicId && !res.headersSent) {
+      try {
+        console.log('Trying Cloudinary API method...');
+        await downloadFromCloudinaryApi(publicId, resourceType, filename, res);
+        return;
+      } catch (apiError) {
+        console.log('Cloudinary API failed:', apiError.message);
       }
     }
 
-    console.log('Redirecting to download URL:', downloadUrl);
-    res.redirect(downloadUrl);
+    // If all methods fail
+    if (!res.headersSent) {
+      res.status(500).json({
+        error: 'Unable to download file. The file may need to be re-uploaded.',
+        hint: 'Please go to Admin Dashboard and re-upload the protocol file.'
+      });
+    }
   } catch (error) {
     console.error('Protocol download error:', error);
-    res.status(500).json({ error: 'Failed to download protocol file' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to download protocol file' });
+    }
   }
 });
 
-// Get protocol file info for download
-app.get('/api/protocols/:id/file-info', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const protocol = await Protocol.findById(id);
-
-    if (!protocol || !protocol.file || !protocol.file.url) {
-      return res.status(404).json({ error: 'Protocol file not found' });
-    }
-
-    // Generate signed URL if public_id exists
-    let downloadUrl = protocol.file.url;
-    if (protocol.file.public_id) {
-      const signedUrl = getSignedUrl(protocol.file.public_id, protocol.file.resource_type || 'raw');
-      if (signedUrl) {
-        downloadUrl = signedUrl;
-      }
-    }
-
-    res.json({
-      url: downloadUrl,
-      filename: protocol.file.originalname || 'protocol.pdf',
-      size: protocol.file.size
-    });
-  } catch (error) {
-    console.error('Protocol file info error:', error);
-    res.status(500).json({ error: 'Failed to get protocol file info' });
-  }
-});
-
-// Download submission file (attached documents)
+// Download submission file (attached documents) - streams through server with fallback
 app.get('/api/submission/:id/file/:fileIndex/download', async (req, res) => {
   try {
     const { id, fileIndex } = req.params;
@@ -1030,24 +1132,45 @@ app.get('/api/submission/:id/file/:fileIndex/download', async (req, res) => {
     }
 
     const file = submission.files[fileIndex];
-    let downloadUrl = file.url;
+    const filename = file.originalname || 'document.pdf';
+    const publicId = file.public_id;
+    const resourceType = file.resource_type || 'raw';
 
-    if (file.public_id) {
-      const signedUrl = getSignedUrl(file.public_id, file.resource_type || 'raw');
-      if (signedUrl) {
-        downloadUrl = signedUrl;
+    console.log('Attempting to download submission file:', filename);
+
+    // Try method 1: Direct URL streaming
+    try {
+      if (file.url) {
+        await streamFileFromUrl(file.url, filename, res);
+        return;
+      }
+    } catch (directError) {
+      console.log('Direct URL failed:', directError.message);
+    }
+
+    // Try method 2: Cloudinary API (if we have public_id)
+    if (publicId && !res.headersSent) {
+      try {
+        await downloadFromCloudinaryApi(publicId, resourceType, filename, res);
+        return;
+      } catch (apiError) {
+        console.log('Cloudinary API failed:', apiError.message);
       }
     }
 
-    console.log('Redirecting to file download:', downloadUrl);
-    res.redirect(downloadUrl);
+    // If all methods fail
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Unable to download file' });
+    }
   } catch (error) {
     console.error('Submission file download error:', error);
-    res.status(500).json({ error: 'Failed to download file' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to download file' });
+    }
   }
 });
 
-// Download admin response file
+// Download admin response file - streams through server with fallback
 app.get('/api/submission/:id/response/download', async (req, res) => {
   try {
     const { id } = req.params;
@@ -1058,20 +1181,41 @@ app.get('/api/submission/:id/response/download', async (req, res) => {
     }
 
     const file = submission.adminResponseFile;
-    let downloadUrl = file.url;
+    const filename = file.originalname || 'response.pdf';
+    const publicId = file.public_id;
+    const resourceType = file.resource_type || 'raw';
 
-    if (file.public_id) {
-      const signedUrl = getSignedUrl(file.public_id, file.resource_type || 'raw');
-      if (signedUrl) {
-        downloadUrl = signedUrl;
+    console.log('Attempting to download response file:', filename);
+
+    // Try method 1: Direct URL streaming
+    try {
+      if (file.url) {
+        await streamFileFromUrl(file.url, filename, res);
+        return;
+      }
+    } catch (directError) {
+      console.log('Direct URL failed:', directError.message);
+    }
+
+    // Try method 2: Cloudinary API (if we have public_id)
+    if (publicId && !res.headersSent) {
+      try {
+        await downloadFromCloudinaryApi(publicId, resourceType, filename, res);
+        return;
+      } catch (apiError) {
+        console.log('Cloudinary API failed:', apiError.message);
       }
     }
 
-    console.log('Redirecting to response download:', downloadUrl);
-    res.redirect(downloadUrl);
+    // If all methods fail
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Unable to download file' });
+    }
   } catch (error) {
     console.error('Response file download error:', error);
-    res.status(500).json({ error: 'Failed to download response file' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to download response file' });
+    }
   }
 });
 
@@ -1085,17 +1229,8 @@ app.get('/api/submission/:id/response-file-info', async (req, res) => {
       return res.status(404).json({ error: 'Response file not found' });
     }
 
-    // Generate signed URL if public_id exists
-    let downloadUrl = submission.adminResponseFile.url;
-    if (submission.adminResponseFile.public_id) {
-      const signedUrl = getSignedUrl(submission.adminResponseFile.public_id, submission.adminResponseFile.resource_type || 'raw');
-      if (signedUrl) {
-        downloadUrl = signedUrl;
-      }
-    }
-
     res.json({
-      url: downloadUrl,
+      url: `${req.protocol}://${req.get('host')}/api/submission/${id}/response/download`,
       filename: submission.adminResponseFile.originalname || 'response.pdf',
       size: submission.adminResponseFile.size
     });
