@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import ResidentCertificateLookup from './ResidentCertificateLookup';
 import ResidentEligibilityChecker from './ResidentEligibilityChecker';
 import DocumentAuthenticationRequest from './DocumentAuthenticationRequest';
@@ -441,231 +441,69 @@ function App() {
     }, 500);
   };
 
-  // Splash Screen
+  // Auto-redirect from splash after 2 seconds
+  useEffect(() => {
+    if (currentView === 'splash') {
+      const timer = setTimeout(() => {
+        enterApp();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentView]);
+
+  // Loading Screen
   if (currentView === 'splash') {
     return (
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1a365d 0%, #234e70 50%, #2d3748 100%)',
+        background: '#f8fafc',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         fontFamily: "'Segoe UI', 'Arial', sans-serif",
         direction: 'rtl',
-        position: 'relative',
-        overflow: 'hidden',
         opacity: splashFading ? 0 : 1,
-        transition: 'opacity 0.5s ease'
+        transition: 'opacity 0.4s ease'
       }}>
-        {/* Animated background elements */}
         <style>{`
-          @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(5deg); }
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
           }
-          @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.5; }
-            50% { transform: scale(1.1); opacity: 0.8; }
-          }
-          @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          @keyframes shimmer {
-            0% { background-position: -200% center; }
-            100% { background-position: 200% center; }
-          }
-          @keyframes ripple {
-            0% { transform: scale(0.8); opacity: 1; }
-            100% { transform: scale(2.5); opacity: 0; }
-          }
-          .splash-btn:hover {
-            transform: translateY(-3px) !important;
-            box-shadow: 0 12px 40px rgba(183, 121, 31, 0.5) !important;
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
           }
         `}</style>
 
-        {/* Decorative circles */}
+        {/* Simple Spinner */}
         <div style={{
-          position: 'absolute',
-          top: '10%',
-          right: '10%',
-          width: '150px',
-          height: '150px',
+          width: '50px',
+          height: '50px',
+          border: '4px solid #e2e8f0',
+          borderTop: '4px solid #1a365d',
           borderRadius: '50%',
-          border: '2px solid rgba(255,255,255,0.1)',
-          animation: 'pulse 4s ease-in-out infinite'
-        }} />
-        <div style={{
-          position: 'absolute',
-          bottom: '15%',
-          left: '8%',
-          width: '100px',
-          height: '100px',
-          borderRadius: '50%',
-          border: '2px solid rgba(255,255,255,0.08)',
-          animation: 'pulse 5s ease-in-out infinite 1s'
-        }} />
-        <div style={{
-          position: 'absolute',
-          top: '40%',
-          left: '5%',
-          width: '60px',
-          height: '60px',
-          borderRadius: '50%',
-          background: 'rgba(183, 121, 31, 0.1)',
-          animation: 'float 6s ease-in-out infinite'
+          animation: 'spin 1s linear infinite',
+          marginBottom: '24px'
         }} />
 
-        {/* Main content */}
-        <div style={{
-          textAlign: 'center',
-          zIndex: 10,
-          padding: '40px',
-          animation: 'fadeInUp 0.8s ease-out'
-        }}>
-          {/* Logo/Emblem */}
-          <div style={{
-            width: '120px',
-            height: '120px',
-            background: 'linear-gradient(135deg, #b7791f 0%, #d69e2e 50%, #b7791f 100%)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 32px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2)',
-            border: '4px solid rgba(255,255,255,0.2)',
-            animation: 'float 4s ease-in-out infinite'
-          }}>
-            <span style={{
-              fontSize: '48px',
-              color: '#1a365d',
-              fontWeight: '800',
-              textShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}>ح</span>
-          </div>
-
-          {/* Arabic Title */}
-          <h1 style={{
-            fontSize: '2.5rem',
-            fontWeight: '700',
-            color: '#ffffff',
-            margin: '0 0 8px 0',
-            textShadow: '0 2px 10px rgba(0,0,0,0.3)'
-          }}>
-            اللجنة المحلية
-          </h1>
-          <h2 style={{
-            fontSize: '1.8rem',
-            fontWeight: '600',
-            color: '#d69e2e',
-            margin: '0 0 16px 0'
-          }}>
-            قرية الحسينية
-          </h2>
-
-          {/* Hebrew Title */}
-          <p style={{
-            fontSize: '1.2rem',
-            color: 'rgba(255,255,255,0.8)',
-            margin: '0 0 40px 0'
-          }}>
-            הוועדה המקומית חוסניה
-          </p>
-
-          {/* Tagline */}
-          <div style={{
-            background: 'rgba(255,255,255,0.1)',
-            backdropFilter: 'blur(10px)',
-            borderRadius: '50px',
-            padding: '12px 28px',
-            marginBottom: '48px',
-            border: '1px solid rgba(255,255,255,0.15)'
-          }}>
-            <p style={{
-              fontSize: '1rem',
-              color: 'rgba(255,255,255,0.9)',
-              margin: 0
-            }}>
-              بوابة الخدمات الإلكترونية الرسمية
-            </p>
-            <p style={{
-              fontSize: '0.85rem',
-              color: 'rgba(255,255,255,0.7)',
-              margin: '4px 0 0 0'
-            }}>
-              פורטל השירותים הדיגיטליים הרשמי
-            </p>
-          </div>
-
-          {/* Enter Button */}
-          <button
-            className="splash-btn"
-            onClick={enterApp}
-            style={{
-              padding: '18px 60px',
-              fontSize: '1.2rem',
-              fontWeight: '700',
-              color: '#1a365d',
-              background: 'linear-gradient(135deg, #d69e2e 0%, #b7791f 100%)',
-              border: 'none',
-              borderRadius: '50px',
-              cursor: 'pointer',
-              boxShadow: '0 8px 32px rgba(183, 121, 31, 0.4)',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Segoe UI', 'Arial', sans-serif"
-            }}
-          >
-            <span style={{ marginLeft: '8px' }}>دخول</span>
-            <span style={{ opacity: 0.8 }}>|</span>
-            <span style={{ marginRight: '8px' }}>כניסה</span>
-          </button>
-
-          {/* Service status */}
-          <div style={{
-            marginTop: '32px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px'
-          }}>
-            <span style={{
-              width: '10px',
-              height: '10px',
-              background: '#48bb78',
-              borderRadius: '50%',
-              boxShadow: '0 0 10px #48bb78'
-            }} />
-            <span style={{
-              fontSize: '0.9rem',
-              color: 'rgba(255,255,255,0.7)'
-            }}>
-              الخدمات متاحة 24/7 | השירותים זמינים 24/7
-            </span>
-          </div>
-        </div>
-
-        {/* Bottom decoration */}
-        <div style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: '4px',
-          background: 'linear-gradient(90deg, transparent, #b7791f, transparent)'
-        }} />
-
-        {/* Version/Copyright */}
+        {/* Loading Text */}
         <p style={{
-          position: 'absolute',
-          bottom: '20px',
-          fontSize: '0.75rem',
-          color: 'rgba(255,255,255,0.4)',
-          margin: 0
+          fontSize: '1rem',
+          color: '#1a365d',
+          fontWeight: '500',
+          margin: 0,
+          animation: 'fadeIn 0.5s ease'
         }}>
-          © {new Date().getFullYear()} جميع الحقوق محفوظة
+          جاري التحميل...
+        </p>
+        <p style={{
+          fontSize: '0.85rem',
+          color: '#718096',
+          margin: '8px 0 0 0'
+        }}>
+          טוען...
         </p>
       </div>
     );
