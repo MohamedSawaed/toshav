@@ -945,17 +945,17 @@ app.delete('/api/admin/protocols/:id', adminAuth, async (req, res) => {
 });
 
 // ===== FILE DOWNLOAD ENDPOINTS =====
-// Helper function to get authenticated URL from Cloudinary
-const getAuthenticatedCloudinaryUrl = (publicId, resourceType = 'raw') => {
-  // Generate a signed URL using Cloudinary's SDK
-  const timestamp = Math.floor(Date.now() / 1000);
-  const signature = cloudinary.utils.api_sign_request(
-    { public_id: publicId, timestamp: timestamp },
-    process.env.CLOUDINARY_API_SECRET
-  );
-
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-  return `https://res.cloudinary.com/${cloudName}/${resourceType}/upload/s--${signature}--/${publicId}`;
+// Helper function to generate a properly signed Cloudinary URL
+const generateSignedCloudinaryUrl = (publicId, resourceType = 'raw') => {
+  // Use Cloudinary SDK to generate a signed URL
+  const signedUrl = cloudinary.url(publicId, {
+    resource_type: resourceType,
+    type: 'upload',
+    sign_url: true,
+    secure: true
+  });
+  console.log('Generated signed URL:', signedUrl);
+  return signedUrl;
 };
 
 // Helper function to stream file from URL through our server
@@ -987,10 +987,9 @@ const streamFileFromUrl = (fileUrl, filename, res) => {
         return;
       }
 
-      // Handle 401 - try with different URL format
-      if (response.statusCode === 401) {
-        console.error('Got 401 Unauthorized - file may need re-upload');
-        reject(new Error('File access denied. The file may need to be re-uploaded.'));
+      if (response.statusCode === 401 || response.statusCode === 403) {
+        console.error('Got authorization error:', response.statusCode);
+        reject(new Error(`Authorization error: ${response.statusCode}`));
         return;
       }
 
@@ -1048,23 +1047,10 @@ const streamFileFromUrl = (fileUrl, filename, res) => {
   });
 };
 
-// Helper to download file using Cloudinary API (for restricted files)
-const downloadFromCloudinaryApi = async (publicId, resourceType, filename, res) => {
-  try {
-    // Get file details from Cloudinary
-    const result = await cloudinary.api.resource(publicId, { resource_type: resourceType });
-    console.log('Cloudinary resource:', result);
-
-    // Use the secure_url from API response
-    if (result.secure_url) {
-      await streamFileFromUrl(result.secure_url, filename, res);
-    } else {
-      throw new Error('No URL available for this file');
-    }
-  } catch (error) {
-    console.error('Cloudinary API error:', error);
-    throw error;
-  }
+// Helper to download file using signed URL
+const downloadWithSignedUrl = async (publicId, resourceType, filename, res) => {
+  const signedUrl = generateSignedCloudinaryUrl(publicId, resourceType);
+  await streamFileFromUrl(signedUrl, filename, res);
 };
 
 // Download protocol file - streams file through server with fallback
@@ -1081,36 +1067,40 @@ app.get('/api/protocols/:id/download', async (req, res) => {
     const publicId = protocol.file.public_id;
     const resourceType = protocol.file.resource_type || 'raw';
 
-    console.log('Attempting to download protocol file:', filename);
+    console.log('=== Protocol Download ===');
+    console.log('Filename:', filename);
     console.log('Public ID:', publicId);
-    console.log('File URL:', protocol.file.url);
+    console.log('Resource Type:', resourceType);
+    console.log('Original URL:', protocol.file.url);
 
-    // Try method 1: Direct URL streaming
-    try {
-      if (protocol.file.url) {
-        await streamFileFromUrl(protocol.file.url, filename, res);
+    // Method 1: Try signed URL (best for strict mode accounts)
+    if (publicId) {
+      try {
+        console.log('Trying signed URL method...');
+        await downloadWithSignedUrl(publicId, resourceType, filename, res);
         return;
+      } catch (signedError) {
+        console.log('Signed URL failed:', signedError.message);
       }
-    } catch (directError) {
-      console.log('Direct URL failed:', directError.message);
     }
 
-    // Try method 2: Cloudinary API (if we have public_id)
-    if (publicId && !res.headersSent) {
+    // Method 2: Try direct URL
+    if (protocol.file.url && !res.headersSent) {
       try {
-        console.log('Trying Cloudinary API method...');
-        await downloadFromCloudinaryApi(publicId, resourceType, filename, res);
+        console.log('Trying direct URL method...');
+        await streamFileFromUrl(protocol.file.url, filename, res);
         return;
-      } catch (apiError) {
-        console.log('Cloudinary API failed:', apiError.message);
+      } catch (directError) {
+        console.log('Direct URL failed:', directError.message);
       }
     }
 
     // If all methods fail
     if (!res.headersSent) {
       res.status(500).json({
-        error: 'Unable to download file. The file may need to be re-uploaded.',
-        hint: 'Please go to Admin Dashboard and re-upload the protocol file.'
+        error: 'Unable to download file',
+        details: 'All download methods failed. Please check Cloudinary settings.',
+        publicId: publicId
       });
     }
   } catch (error) {
@@ -1136,25 +1126,27 @@ app.get('/api/submission/:id/file/:fileIndex/download', async (req, res) => {
     const publicId = file.public_id;
     const resourceType = file.resource_type || 'raw';
 
-    console.log('Attempting to download submission file:', filename);
+    console.log('=== Submission File Download ===');
+    console.log('Filename:', filename);
+    console.log('Public ID:', publicId);
 
-    // Try method 1: Direct URL streaming
-    try {
-      if (file.url) {
-        await streamFileFromUrl(file.url, filename, res);
+    // Method 1: Try signed URL first
+    if (publicId) {
+      try {
+        await downloadWithSignedUrl(publicId, resourceType, filename, res);
         return;
+      } catch (signedError) {
+        console.log('Signed URL failed:', signedError.message);
       }
-    } catch (directError) {
-      console.log('Direct URL failed:', directError.message);
     }
 
-    // Try method 2: Cloudinary API (if we have public_id)
-    if (publicId && !res.headersSent) {
+    // Method 2: Try direct URL
+    if (file.url && !res.headersSent) {
       try {
-        await downloadFromCloudinaryApi(publicId, resourceType, filename, res);
+        await streamFileFromUrl(file.url, filename, res);
         return;
-      } catch (apiError) {
-        console.log('Cloudinary API failed:', apiError.message);
+      } catch (directError) {
+        console.log('Direct URL failed:', directError.message);
       }
     }
 
@@ -1185,25 +1177,27 @@ app.get('/api/submission/:id/response/download', async (req, res) => {
     const publicId = file.public_id;
     const resourceType = file.resource_type || 'raw';
 
-    console.log('Attempting to download response file:', filename);
+    console.log('=== Response File Download ===');
+    console.log('Filename:', filename);
+    console.log('Public ID:', publicId);
 
-    // Try method 1: Direct URL streaming
-    try {
-      if (file.url) {
-        await streamFileFromUrl(file.url, filename, res);
+    // Method 1: Try signed URL first
+    if (publicId) {
+      try {
+        await downloadWithSignedUrl(publicId, resourceType, filename, res);
         return;
+      } catch (signedError) {
+        console.log('Signed URL failed:', signedError.message);
       }
-    } catch (directError) {
-      console.log('Direct URL failed:', directError.message);
     }
 
-    // Try method 2: Cloudinary API (if we have public_id)
-    if (publicId && !res.headersSent) {
+    // Method 2: Try direct URL
+    if (file.url && !res.headersSent) {
       try {
-        await downloadFromCloudinaryApi(publicId, resourceType, filename, res);
+        await streamFileFromUrl(file.url, filename, res);
         return;
-      } catch (apiError) {
-        console.log('Cloudinary API failed:', apiError.message);
+      } catch (directError) {
+        console.log('Direct URL failed:', directError.message);
       }
     }
 
