@@ -451,12 +451,12 @@ function App() {
     }
   }, [currentView]);
 
-  // Loading Screen
+  // Loading Screen - Geometric Mathematical Design
   if (currentView === 'splash') {
     return (
       <div style={{
         minHeight: '100vh',
-        background: '#f8fafc',
+        background: '#0f172a',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -464,47 +464,221 @@ function App() {
         fontFamily: "'Segoe UI', 'Arial', sans-serif",
         direction: 'rtl',
         opacity: splashFading ? 0 : 1,
-        transition: 'opacity 0.4s ease'
+        transition: 'opacity 0.4s ease',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
         <style>{`
-          @keyframes spin {
+          @keyframes rotate {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
+          @keyframes rotateReverse {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+          }
+          @keyframes pulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+          }
+          @keyframes dash {
+            0% { stroke-dashoffset: 283; }
+            50% { stroke-dashoffset: 70; }
+            100% { stroke-dashoffset: 283; }
+          }
           @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes dots {
+            0%, 20% { opacity: 0; }
+            40% { opacity: 1; }
+            100% { opacity: 0; }
           }
         `}</style>
 
-        {/* Simple Spinner */}
+        {/* Background Grid Pattern */}
         <div style={{
-          width: '50px',
-          height: '50px',
-          border: '4px solid #e2e8f0',
-          borderTop: '4px solid #1a365d',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-          marginBottom: '24px'
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: `
+            linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px',
+          opacity: 0.5
         }} />
 
+        {/* Geometric Loader Container */}
+        <div style={{
+          position: 'relative',
+          width: '120px',
+          height: '120px',
+          marginBottom: '32px'
+        }}>
+          {/* Outer Ring - Rotating */}
+          <svg style={{
+            position: 'absolute',
+            width: '120px',
+            height: '120px',
+            animation: 'rotate 8s linear infinite'
+          }}>
+            <circle
+              cx="60" cy="60" r="55"
+              fill="none"
+              stroke="rgba(59, 130, 246, 0.2)"
+              strokeWidth="1"
+            />
+            <circle
+              cx="60" cy="60" r="55"
+              fill="none"
+              stroke="#3b82f6"
+              strokeWidth="2"
+              strokeDasharray="30 20"
+              strokeLinecap="round"
+            />
+          </svg>
+
+          {/* Middle Ring - Counter Rotating */}
+          <svg style={{
+            position: 'absolute',
+            width: '120px',
+            height: '120px',
+            animation: 'rotateReverse 6s linear infinite'
+          }}>
+            <circle
+              cx="60" cy="60" r="42"
+              fill="none"
+              stroke="rgba(99, 102, 241, 0.15)"
+              strokeWidth="1"
+            />
+            <circle
+              cx="60" cy="60" r="42"
+              fill="none"
+              stroke="#6366f1"
+              strokeWidth="1.5"
+              strokeDasharray="15 25"
+              strokeLinecap="round"
+            />
+          </svg>
+
+          {/* Inner Progress Ring */}
+          <svg style={{
+            position: 'absolute',
+            width: '120px',
+            height: '120px',
+            transform: 'rotate(-90deg)'
+          }}>
+            <circle
+              cx="60" cy="60" r="28"
+              fill="none"
+              stroke="rgba(139, 92, 246, 0.1)"
+              strokeWidth="3"
+            />
+            <circle
+              cx="60" cy="60" r="28"
+              fill="none"
+              stroke="url(#gradient)"
+              strokeWidth="3"
+              strokeDasharray="176"
+              strokeLinecap="round"
+              style={{ animation: 'dash 2s ease-in-out infinite' }}
+            />
+            <defs>
+              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#3b82f6" />
+                <stop offset="50%" stopColor="#8b5cf6" />
+                <stop offset="100%" stopColor="#06b6d4" />
+              </linearGradient>
+            </defs>
+          </svg>
+
+          {/* Center Hexagon */}
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            animation: 'pulse 2s ease-in-out infinite'
+          }}>
+            <svg width="36" height="36" viewBox="0 0 36 36">
+              <polygon
+                points="18,2 32,10 32,26 18,34 4,26 4,10"
+                fill="none"
+                stroke="url(#hexGradient)"
+                strokeWidth="1.5"
+              />
+              <polygon
+                points="18,8 26,13 26,23 18,28 10,23 10,13"
+                fill="rgba(59, 130, 246, 0.1)"
+                stroke="rgba(99, 102, 241, 0.5)"
+                strokeWidth="1"
+              />
+              <defs>
+                <linearGradient id="hexGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#8b5cf6" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+
+          {/* Orbiting Dots */}
+          {[0, 1, 2].map((i) => (
+            <div key={i} style={{
+              position: 'absolute',
+              width: '120px',
+              height: '120px',
+              animation: `rotate ${4 + i}s linear infinite`,
+              animationDelay: `${i * 0.3}s`
+            }}>
+              <div style={{
+                position: 'absolute',
+                top: '0',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '6px',
+                height: '6px',
+                background: `hsl(${220 + i * 30}, 80%, 60%)`,
+                borderRadius: '50%',
+                boxShadow: `0 0 10px hsl(${220 + i * 30}, 80%, 60%)`
+              }} />
+            </div>
+          ))}
+        </div>
+
         {/* Loading Text */}
-        <p style={{
-          fontSize: '1rem',
-          color: '#1a365d',
-          fontWeight: '500',
-          margin: 0,
-          animation: 'fadeIn 0.5s ease'
+        <div style={{
+          textAlign: 'center',
+          animation: 'fadeIn 0.6s ease'
         }}>
-          جاري التحميل...
-        </p>
-        <p style={{
-          fontSize: '0.85rem',
-          color: '#718096',
-          margin: '8px 0 0 0'
-        }}>
-          טוען...
-        </p>
+          <p style={{
+            fontSize: '0.9rem',
+            color: '#94a3b8',
+            fontWeight: '400',
+            margin: 0,
+            letterSpacing: '3px',
+            textTransform: 'uppercase'
+          }}>
+            <span style={{ animation: 'dots 1.4s infinite', animationDelay: '0s' }}>.</span>
+            <span style={{ animation: 'dots 1.4s infinite', animationDelay: '0.2s' }}>.</span>
+            <span style={{ animation: 'dots 1.4s infinite', animationDelay: '0.4s' }}>.</span>
+          </p>
+        </div>
+
+        {/* Decorative Corner Lines */}
+        <svg style={{ position: 'absolute', top: '20px', left: '20px', width: '60px', height: '60px', opacity: 0.3 }}>
+          <path d="M0 40 L0 0 L40 0" fill="none" stroke="#3b82f6" strokeWidth="1" />
+        </svg>
+        <svg style={{ position: 'absolute', top: '20px', right: '20px', width: '60px', height: '60px', opacity: 0.3 }}>
+          <path d="M60 40 L60 0 L20 0" fill="none" stroke="#3b82f6" strokeWidth="1" />
+        </svg>
+        <svg style={{ position: 'absolute', bottom: '20px', left: '20px', width: '60px', height: '60px', opacity: 0.3 }}>
+          <path d="M0 20 L0 60 L40 60" fill="none" stroke="#3b82f6" strokeWidth="1" />
+        </svg>
+        <svg style={{ position: 'absolute', bottom: '20px', right: '20px', width: '60px', height: '60px', opacity: 0.3 }}>
+          <path d="M60 20 L60 60 L20 60" fill="none" stroke="#3b82f6" strokeWidth="1" />
+        </svg>
       </div>
     );
   }
