@@ -138,115 +138,88 @@ const MeetingProtocols = () => {
           </div>
         </div>
 
-        {/* Protocols List */}
-        <div style={styles.protocolsGrid}>
-          {loading ? (
-            <div style={styles.emptyState}>
-              <span style={styles.emptyIcon}>⏳</span>
-              <h3 style={styles.emptyTitle}>جاري تحميل البروتوكولات...</h3>
-              <p style={styles.emptyText}>يرجى الانتظار | אנא המתינו</p>
-            </div>
-          ) : protocols.length === 0 ? (
-            <div style={styles.emptyState}>
-              <span style={styles.emptyIcon}>📭</span>
-              <h3 style={styles.emptyTitle}>لا توجد بروتوكولات حالياً</h3>
-              <p style={styles.emptyText}>سيتم نشر البروتوكولات الجديدة هنا | פרוטוקולים חדשים יפורסמו כאן</p>
-            </div>
-          ) : (
-            protocols.map((protocol, index) => (
-              <div
-                key={protocol.id || protocol._id}
-                className="protocol-card"
-                style={{
-                  ...styles.protocolCard,
-                  animationDelay: `${index * 0.1}s`
-                }}
-              >
-                {/* Card Header */}
-                <div style={styles.cardHeader}>
-                  <div style={styles.protocolNumber}>
-                    <span style={styles.numberLabel}>جلسة رقم | ישיבה מס'</span>
-                    <span style={styles.numberValue}>{protocol.meetingNumber || '-'}</span>
-                  </div>
-                  <div style={styles.dateBadge}>
-                    <span style={styles.dateIcon}>📅</span>
-                    <span>{formatDate(protocol.meetingDate)}</span>
-                  </div>
-                </div>
-
-                {/* Card Body */}
-                <div style={styles.cardBody}>
-                  <div style={styles.typeIcon}>📋</div>
-                  <h2 style={styles.protocolTitle}>{protocol.title}</h2>
-                  {protocol.titleHe && (
-                    <p style={styles.protocolTitleHe}>{protocol.titleHe}</p>
-                  )}
-
-                  {protocol.description && (
-                    <p style={styles.protocolDesc}>{protocol.description}</p>
-                  )}
-                  {protocol.descriptionHe && (
-                    <p style={styles.protocolDescHe}>{protocol.descriptionHe}</p>
-                  )}
-                </div>
-
-                {/* Card Footer */}
-                <div style={styles.cardFooter}>
-                  <div style={styles.dateInfo}>
-                    <div style={styles.dateRow}>
-                      <span style={styles.dateIconSmall}>📅</span>
-                      <div>
-                        <span style={styles.dateLabel}>تاريخ الجلسة</span>
-                        <span style={styles.dateValue}>{formatDate(protocol.meetingDate)}</span>
+        {/* Protocols Table */}
+        {loading ? (
+          <div style={styles.emptyState}>
+            <span style={styles.emptyIcon}>⏳</span>
+            <h3 style={styles.emptyTitle}>جاري تحميل البروتوكولات...</h3>
+            <p style={styles.emptyText}>يرجى الانتظار | אנא המתינו</p>
+          </div>
+        ) : protocols.length === 0 ? (
+          <div style={styles.emptyState}>
+            <span style={styles.emptyIcon}>📭</span>
+            <h3 style={styles.emptyTitle}>لا توجد بروتوكولات حالياً</h3>
+            <p style={styles.emptyText}>سيتم نشر البروتوكولات الجديدة هنا | פרוטוקולים חדשים יפורסמו כאן</p>
+          </div>
+        ) : (
+          <div style={styles.tableContainer}>
+            <table style={styles.table}>
+              <thead>
+                <tr style={styles.tableHeader}>
+                  <th style={styles.th}>#</th>
+                  <th style={styles.th}>رقم الجلسة<br/><span style={styles.thHe}>מס' ישיבה</span></th>
+                  <th style={styles.th}>التاريخ<br/><span style={styles.thHe}>תאריך</span></th>
+                  <th style={styles.thTitle}>العنوان<br/><span style={styles.thHe}>כותרת</span></th>
+                  <th style={styles.th}>تحميل<br/><span style={styles.thHe}>הורדה</span></th>
+                  <th style={styles.th}>تفاصيل<br/><span style={styles.thHe}>פרטים</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {protocols.map((protocol, index) => (
+                  <tr key={protocol.id || protocol._id} style={styles.tableRow}>
+                    <td style={styles.td}>
+                      <span style={styles.rowNumber}>{index + 1}</span>
+                    </td>
+                    <td style={styles.td}>
+                      <span style={styles.meetingNum}>{protocol.meetingNumber || '-'}</span>
+                    </td>
+                    <td style={styles.td}>
+                      <div style={styles.dateCell}>
+                        <span style={styles.dateAr}>{formatDate(protocol.meetingDate)}</span>
+                        <span style={styles.dateHe}>{formatDateHe(protocol.meetingDate)}</span>
                       </div>
-                    </div>
-                    <div style={styles.dateRow}>
-                      <span style={styles.dateIconSmall}>🗓️</span>
-                      <div>
-                        <span style={styles.dateLabel}>תאריך הישיבה</span>
-                        <span style={styles.dateValue}>{formatDateHe(protocol.meetingDate)}</span>
+                    </td>
+                    <td style={styles.tdTitle}>
+                      <div style={styles.titleCell}>
+                        <span style={styles.titleAr}>{protocol.title}</span>
+                        {protocol.titleHe && (
+                          <span style={styles.titleHe}>{protocol.titleHe}</span>
+                        )}
+                        {protocol.description && (
+                          <span style={styles.descText}>{protocol.description}</span>
+                        )}
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div style={styles.cardActions}>
-                  {protocol.file && protocol.file.url && (
-                    <button
-                      onClick={() => handleDownload(protocol)}
-                      disabled={downloading === (protocol.id || protocol._id)}
-                      className="view-btn"
-                      style={{
-                        ...styles.viewBtn,
-                        opacity: downloading === (protocol.id || protocol._id) ? 0.7 : 1,
-                        cursor: downloading === (protocol.id || protocol._id) ? 'wait' : 'pointer'
-                      }}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" style={{ width: 18, height: 18 }}>
-                        <path d="M21 15V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M7 10L12 15L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      <span>{downloading === (protocol.id || protocol._id) ? 'جاري التحميل...' : 'تحميل البروتوكول | הורדת הפרוטוקול'}</span>
-                    </button>
-                  )}
-                  <button
-                    className="download-btn"
-                    style={styles.detailBtn}
-                    onClick={() => setSelectedProtocol(protocol)}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}>
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
-                    </svg>
-                    <span>عرض التفاصيل</span>
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+                    </td>
+                    <td style={styles.td}>
+                      {protocol.file && protocol.file.url ? (
+                        <button
+                          onClick={() => handleDownload(protocol)}
+                          disabled={downloading === (protocol.id || protocol._id)}
+                          style={{
+                            ...styles.downloadBtn,
+                            opacity: downloading === (protocol.id || protocol._id) ? 0.6 : 1
+                          }}
+                        >
+                          {downloading === (protocol.id || protocol._id) ? '...' : '📥 تحميل'}
+                        </button>
+                      ) : (
+                        <span style={styles.noFile}>-</span>
+                      )}
+                    </td>
+                    <td style={styles.td}>
+                      <button
+                        onClick={() => setSelectedProtocol(protocol)}
+                        style={styles.detailsBtn}
+                      >
+                        👁️
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Footer */}
         <footer style={styles.footer}>
@@ -806,6 +779,153 @@ const styles = {
     fontFamily: '"Tajawal", sans-serif',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
+  },
+  // Table Styles
+  tableContainer: {
+    background: '#fff',
+    borderRadius: '16px',
+    overflow: 'hidden',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+    border: '2px solid #e2e8f0',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    fontFamily: '"Tajawal", sans-serif',
+  },
+  tableHeader: {
+    background: 'linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%)',
+  },
+  th: {
+    padding: '16px 14px',
+    textAlign: 'center',
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: '13px',
+    borderBottom: '3px solid #1a365d',
+    whiteSpace: 'nowrap',
+  },
+  thTitle: {
+    padding: '16px 14px',
+    textAlign: 'right',
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: '13px',
+    borderBottom: '3px solid #1a365d',
+  },
+  thHe: {
+    display: 'block',
+    fontSize: '11px',
+    fontWeight: '500',
+    opacity: 0.85,
+    marginTop: '2px',
+  },
+  tableRow: {
+    borderBottom: '1px solid #e2e8f0',
+    transition: 'background 0.2s',
+  },
+  td: {
+    padding: '14px',
+    textAlign: 'center',
+    fontSize: '14px',
+    color: '#334155',
+    verticalAlign: 'middle',
+  },
+  tdTitle: {
+    padding: '14px',
+    textAlign: 'right',
+    fontSize: '14px',
+    color: '#334155',
+    verticalAlign: 'middle',
+    maxWidth: '350px',
+  },
+  rowNumber: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '28px',
+    height: '28px',
+    background: '#f1f5f9',
+    borderRadius: '50%',
+    fontSize: '12px',
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  meetingNum: {
+    fontWeight: '800',
+    color: '#1e3a5f',
+    fontSize: '16px',
+    fontFamily: 'monospace',
+  },
+  dateCell: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    alignItems: 'center',
+  },
+  dateAr: {
+    fontSize: '13px',
+    color: '#334155',
+    fontWeight: '500',
+  },
+  dateHe: {
+    fontSize: '11px',
+    color: '#94a3b8',
+  },
+  titleCell: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+  titleAr: {
+    fontWeight: '700',
+    color: '#1e293b',
+    fontSize: '15px',
+    lineHeight: 1.4,
+  },
+  titleHe: {
+    fontSize: '13px',
+    color: '#64748b',
+    fontFamily: "'Heebo', sans-serif",
+  },
+  descText: {
+    fontSize: '12px',
+    color: '#94a3b8',
+    marginTop: '4px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+  },
+  downloadBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '8px 16px',
+    background: 'linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: '600',
+    fontFamily: '"Tajawal", sans-serif',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    boxShadow: '0 2px 8px rgba(26, 54, 93, 0.25)',
+  },
+  noFile: {
+    color: '#cbd5e0',
+    fontSize: '16px',
+  },
+  detailsBtn: {
+    padding: '8px 14px',
+    background: '#f1f5f9',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    fontSize: '16px',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
   },
 };
 
