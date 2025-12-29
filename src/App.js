@@ -64,8 +64,8 @@ function App() {
       icon: '📄',
       titleHe: 'אישור תושבות',
       titleAr: 'شهادة السكن',
-      descHe: 'הורדת אישור מיידית',
-      descAr: 'تحميل شهادة السكن الرسمية'
+      descHe: 'תנאים להפקה עצמית של אישור תושב',
+      descAr: 'شروط الاستخراج الذاتي لشهادة السكن'
     },
     {
       id: 'documentAuth',
