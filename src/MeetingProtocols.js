@@ -35,20 +35,26 @@ const MeetingProtocols = () => {
     return date.toLocaleDateString('he-IL', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  // Handle file download - open Cloudinary URL directly in new tab
+  // Handle file download - open Cloudinary URL directly in new tab (v2 - fixed)
   const handleDownload = (protocol) => {
+    console.log('Download clicked for protocol:', protocol.id || protocol._id);
+    console.log('Protocol file data:', protocol.file);
+
     if (!protocol.file || !protocol.file.url) {
-      alert('لا يوجد ملف للتحميل');
+      alert('لا يوجد ملف للتحميل | אין קובץ להורדה');
       return;
     }
 
     const protocolId = protocol.id || protocol._id;
+    const fileUrl = protocol.file.url;
+
+    console.log('Opening file URL:', fileUrl);
     setDownloading(protocolId);
 
-    // Open the Cloudinary URL directly - raw files download automatically
-    window.open(protocol.file.url, '_blank');
+    // Open the Cloudinary URL directly in new tab
+    window.open(fileUrl, '_blank');
 
-    setTimeout(() => setDownloading(null), 1000);
+    setTimeout(() => setDownloading(null), 1500);
   };
 
   return (
