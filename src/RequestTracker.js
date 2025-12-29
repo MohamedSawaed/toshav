@@ -592,7 +592,9 @@ const RequestTracker = () => {
                             </div>
                           </div>
                           <a
-                            href={`${API_URL}/api/submission/${request.id}/download-response`}
+                            href={request.adminResponseFile.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             style={styles.downloadBtn}
                           >
                             <span>⬇</span>
@@ -683,7 +685,9 @@ const RequestTracker = () => {
                             </div>
                           </div>
                           <a
-                            href={`${API_URL}/api/submission/${requestData.id}/download-response`}
+                            href={requestData.adminResponseFile.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             style={styles.downloadBtn}
                           >
                             <span>⬇</span>

@@ -35,8 +35,8 @@ const MeetingProtocols = () => {
     return date.toLocaleDateString('he-IL', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  // Handle file download properly
-  const handleDownload = async (protocol) => {
+  // Handle file download - open Cloudinary URL directly in new tab
+  const handleDownload = (protocol) => {
     if (!protocol.file || !protocol.file.url) {
       alert('لا يوجد ملف للتحميل');
       return;
@@ -45,23 +45,10 @@ const MeetingProtocols = () => {
     const protocolId = protocol.id || protocol._id;
     setDownloading(protocolId);
 
-    try {
-      // Use the dedicated download endpoint
-      const downloadUrl = `${API_URL}/protocols/${protocolId}/download`;
+    // Open the Cloudinary URL directly - raw files download automatically
+    window.open(protocol.file.url, '_blank');
 
-      // Create a hidden link and trigger download
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.setAttribute('download', protocol.file.originalname || 'protocol.pdf');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error('Download error:', error);
-      alert('حدث خطأ أثناء تحميل الملف');
-    } finally {
-      setTimeout(() => setDownloading(null), 1000);
-    }
+    setTimeout(() => setDownloading(null), 1000);
   };
 
   return (

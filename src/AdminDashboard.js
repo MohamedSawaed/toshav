@@ -417,7 +417,9 @@ const AdminDashboard = () => {
                   <div key={index} style={styles.fileItem}>
                     <span>📎 {file.originalname}</span>
                     <a
-                      href={`${API_URL}/download?url=${encodeURIComponent(file.url)}&filename=${encodeURIComponent(file.originalname)}`}
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: '600' }}
                     >
                       تحميل
@@ -444,7 +446,9 @@ const AdminDashboard = () => {
                   </div>
                   <div style={styles.responseFileActions}>
                     <a
-                      href={`${API_URL}/download?url=${encodeURIComponent(selectedSubmission.adminResponseFile.url)}&filename=${encodeURIComponent(selectedSubmission.adminResponseFile.originalname)}`}
+                      href={selectedSubmission.adminResponseFile.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       style={styles.downloadResponseBtn}
                     >
                       تحميل
@@ -824,7 +828,9 @@ const AdminDashboard = () => {
                   <div style={styles.protocolFileInfo}>
                     <span>📎</span>
                     <a
-                      href={`${API_URL}/protocols/${protocol.id || protocol._id}/download`}
+                      href={protocol.file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       style={styles.protocolFileLink}
                     >
                       {protocol.file.originalname || 'تحميل الملف'}

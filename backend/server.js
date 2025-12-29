@@ -936,71 +936,18 @@ app.delete('/api/admin/protocols/:id', adminAuth, async (req, res) => {
   }
 });
 
-// ===== FILE DOWNLOAD ENDPOINT =====
-// This endpoint properly handles file downloads from Cloudinary
-app.get('/api/download', async (req, res) => {
-  try {
-    const { url, filename } = req.query;
+// ===== FILE DOWNLOAD ENDPOINTS =====
+// Helper function to get download URL for Cloudinary files
+const getDownloadUrl = (fileUrl, filename) => {
+  if (!fileUrl) return null;
 
-    if (!url) {
-      return res.status(400).json({ error: 'URL is required' });
-    }
+  // For raw files (PDF, DOC, etc.), the URL already works for download
+  // Just return the original URL - Cloudinary raw files download directly
+  return fileUrl;
+};
 
-    // Validate that the URL is from Cloudinary
-    if (!url.includes('cloudinary.com') && !url.includes('res.cloudinary.com')) {
-      return res.status(400).json({ error: 'Invalid file URL' });
-    }
-
-    // Fetch the file from Cloudinary
-    const https = require('https');
-    const http = require('http');
-    const protocol = url.startsWith('https') ? https : http;
-
-    // Make a request to get the file
-    protocol.get(url, (response) => {
-      // Handle redirects
-      if (response.statusCode === 301 || response.statusCode === 302) {
-        const redirectUrl = response.headers.location;
-        protocol.get(redirectUrl, (redirectResponse) => {
-          const downloadFilename = filename || 'download';
-          res.setHeader('Content-Type', redirectResponse.headers['content-type'] || 'application/octet-stream');
-          res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadFilename)}"`);
-          if (redirectResponse.headers['content-length']) {
-            res.setHeader('Content-Length', redirectResponse.headers['content-length']);
-          }
-          redirectResponse.pipe(res);
-        }).on('error', (error) => {
-          console.error('Download redirect error:', error);
-          res.status(500).json({ error: 'Failed to download file' });
-        });
-        return;
-      }
-
-      if (response.statusCode !== 200) {
-        console.error('Download failed with status:', response.statusCode);
-        return res.status(response.statusCode).json({ error: 'Failed to fetch file' });
-      }
-
-      const downloadFilename = filename || 'download';
-      res.setHeader('Content-Type', response.headers['content-type'] || 'application/octet-stream');
-      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadFilename)}"`);
-      if (response.headers['content-length']) {
-        res.setHeader('Content-Length', response.headers['content-length']);
-      }
-
-      response.pipe(res);
-    }).on('error', (error) => {
-      console.error('Download error:', error);
-      res.status(500).json({ error: 'Failed to download file' });
-    });
-  } catch (error) {
-    console.error('Download endpoint error:', error);
-    res.status(500).json({ error: 'Failed to process download request' });
-  }
-});
-
-// Get protocol file for download
-app.get('/api/protocols/:id/download', async (req, res) => {
+// Get protocol file info for download
+app.get('/api/protocols/:id/file-info', async (req, res) => {
   try {
     const { id } = req.params;
     const protocol = await Protocol.findById(id);
@@ -1009,17 +956,19 @@ app.get('/api/protocols/:id/download', async (req, res) => {
       return res.status(404).json({ error: 'Protocol file not found' });
     }
 
-    // Redirect to the download endpoint with proper parameters
-    const downloadUrl = `/api/download?url=${encodeURIComponent(protocol.file.url)}&filename=${encodeURIComponent(protocol.file.originalname || 'protocol.pdf')}`;
-    res.redirect(downloadUrl);
+    res.json({
+      url: protocol.file.url,
+      filename: protocol.file.originalname || 'protocol.pdf',
+      size: protocol.file.size
+    });
   } catch (error) {
-    console.error('Protocol download error:', error);
-    res.status(500).json({ error: 'Failed to download protocol file' });
+    console.error('Protocol file info error:', error);
+    res.status(500).json({ error: 'Failed to get protocol file info' });
   }
 });
 
-// Get admin response file for download
-app.get('/api/submission/:id/download-response', async (req, res) => {
+// Get admin response file info for download
+app.get('/api/submission/:id/response-file-info', async (req, res) => {
   try {
     const { id } = req.params;
     const submission = await Submission.findById(id);
@@ -1028,11 +977,14 @@ app.get('/api/submission/:id/download-response', async (req, res) => {
       return res.status(404).json({ error: 'Response file not found' });
     }
 
-    const downloadUrl = `/api/download?url=${encodeURIComponent(submission.adminResponseFile.url)}&filename=${encodeURIComponent(submission.adminResponseFile.originalname || 'response.pdf')}`;
-    res.redirect(downloadUrl);
+    res.json({
+      url: submission.adminResponseFile.url,
+      filename: submission.adminResponseFile.originalname || 'response.pdf',
+      size: submission.adminResponseFile.size
+    });
   } catch (error) {
-    console.error('Response file download error:', error);
-    res.status(500).json({ error: 'Failed to download response file' });
+    console.error('Response file info error:', error);
+    res.status(500).json({ error: 'Failed to get response file info' });
   }
 });
 
