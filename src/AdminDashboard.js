@@ -417,7 +417,7 @@ const AdminDashboard = () => {
                   <div key={index} style={styles.fileItem}>
                     <span>📎 {file.originalname}</span>
                     <a
-                      href={`${API_URL}/submission/${selectedSubmission.id}/file/${index}/download`}
+                      href={`${API_URL}/api/submission/${selectedSubmission.id}/file/${index}/download`}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: '600' }}
@@ -446,7 +446,7 @@ const AdminDashboard = () => {
                   </div>
                   <div style={styles.responseFileActions}>
                     <a
-                      href={`${API_URL}/submission/${selectedSubmission.id}/response/download`}
+                      href={`${API_URL}/api/submission/${selectedSubmission.id}/response/download`}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={styles.downloadResponseBtn}
