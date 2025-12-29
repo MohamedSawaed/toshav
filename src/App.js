@@ -451,18 +451,18 @@ function App() {
     }
   }, [currentView]);
 
-  // Loading Screen - Geometric Mathematical Design
+  // Loading Screen - Advanced Black & White Geometric
   if (currentView === 'splash') {
     return (
       <div style={{
         minHeight: '100vh',
-        background: '#0f172a',
+        background: '#000',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: "'Segoe UI', 'Arial', sans-serif",
-        direction: 'rtl',
+        fontFamily: "'Courier New', monospace",
+        direction: 'ltr',
         opacity: splashFading ? 0 : 1,
         transition: 'opacity 0.4s ease',
         position: 'relative',
@@ -470,215 +470,280 @@ function App() {
       }}>
         <style>{`
           @keyframes rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
           }
           @keyframes rotateReverse {
-            0% { transform: rotate(360deg); }
-            100% { transform: rotate(0deg); }
+            from { transform: rotate(360deg); }
+            to { transform: rotate(0deg); }
+          }
+          @keyframes scale {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+          }
+          @keyframes morph {
+            0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+            25% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+            50% { border-radius: 50% 60% 30% 60% / 30% 60% 70% 40%; }
+            75% { border-radius: 60% 40% 60% 30% / 70% 30% 50% 60%; }
+          }
+          @keyframes trace {
+            0% { stroke-dashoffset: 1000; }
+            100% { stroke-dashoffset: 0; }
           }
           @keyframes pulse {
-            0%, 100% { opacity: 0.4; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.05); }
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
           }
-          @keyframes dash {
-            0% { stroke-dashoffset: 283; }
-            50% { stroke-dashoffset: 70; }
-            100% { stroke-dashoffset: 283; }
+          @keyframes scanline {
+            0% { top: -10%; }
+            100% { top: 110%; }
           }
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+          @keyframes glitch {
+            0%, 90%, 100% { transform: translate(0); }
+            92% { transform: translate(-2px, 1px); }
+            94% { transform: translate(2px, -1px); }
+            96% { transform: translate(-1px, -1px); }
+            98% { transform: translate(1px, 1px); }
           }
-          @keyframes dots {
-            0%, 20% { opacity: 0; }
-            40% { opacity: 1; }
-            100% { opacity: 0; }
+          @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+          }
+          @keyframes wave {
+            0%, 100% { transform: translateY(0) scaleY(1); }
+            25% { transform: translateY(-2px) scaleY(1.5); }
+            50% { transform: translateY(0) scaleY(1); }
+            75% { transform: translateY(2px) scaleY(0.5); }
           }
         `}</style>
 
-        {/* Background Grid Pattern */}
+        {/* Scanline Effect */}
+        <div style={{
+          position: 'absolute',
+          width: '100%',
+          height: '2px',
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
+          animation: 'scanline 3s linear infinite',
+          pointerEvents: 'none'
+        }} />
+
+        {/* Grid Background */}
         <div style={{
           position: 'absolute',
           inset: 0,
           backgroundImage: `
-            linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px)
+            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)
           `,
-          backgroundSize: '50px 50px',
-          opacity: 0.5
+          backgroundSize: '40px 40px'
         }} />
 
-        {/* Geometric Loader Container */}
+        {/* Radial Gradient Overlay */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(circle at center, transparent 0%, #000 70%)'
+        }} />
+
+        {/* Main Loader */}
         <div style={{
           position: 'relative',
-          width: '120px',
-          height: '120px',
-          marginBottom: '32px'
+          width: '200px',
+          height: '200px'
         }}>
-          {/* Outer Ring - Rotating */}
+          {/* Outer Morphing Shape */}
+          <div style={{
+            position: 'absolute',
+            inset: '10px',
+            border: '1px solid rgba(255,255,255,0.1)',
+            animation: 'morph 8s ease-in-out infinite, rotate 20s linear infinite'
+          }} />
+
+          {/* Concentric Circles */}
+          {[0, 1, 2, 3, 4].map((i) => (
+            <svg key={i} style={{
+              position: 'absolute',
+              width: '200px',
+              height: '200px',
+              animation: `${i % 2 === 0 ? 'rotate' : 'rotateReverse'} ${10 + i * 3}s linear infinite`
+            }}>
+              <circle
+                cx="100" cy="100" r={90 - i * 15}
+                fill="none"
+                stroke={`rgba(255,255,255,${0.05 + i * 0.03})`}
+                strokeWidth="0.5"
+                strokeDasharray={i % 2 === 0 ? `${5 + i * 2} ${10 + i * 3}` : 'none'}
+              />
+            </svg>
+          ))}
+
+          {/* Rotating Lines */}
           <svg style={{
             position: 'absolute',
-            width: '120px',
-            height: '120px',
-            animation: 'rotate 8s linear infinite'
+            width: '200px',
+            height: '200px',
+            animation: 'rotate 15s linear infinite'
           }}>
-            <circle
-              cx="60" cy="60" r="55"
-              fill="none"
-              stroke="rgba(59, 130, 246, 0.2)"
-              strokeWidth="1"
-            />
-            <circle
-              cx="60" cy="60" r="55"
-              fill="none"
-              stroke="#3b82f6"
-              strokeWidth="2"
-              strokeDasharray="30 20"
-              strokeLinecap="round"
-            />
+            {[0, 45, 90, 135].map((angle) => (
+              <line
+                key={angle}
+                x1="100" y1="20"
+                x2="100" y2="40"
+                stroke="rgba(255,255,255,0.2)"
+                strokeWidth="1"
+                transform={`rotate(${angle} 100 100)`}
+              />
+            ))}
           </svg>
 
-          {/* Middle Ring - Counter Rotating */}
+          {/* Counter Rotating Lines */}
           <svg style={{
             position: 'absolute',
-            width: '120px',
-            height: '120px',
-            animation: 'rotateReverse 6s linear infinite'
+            width: '200px',
+            height: '200px',
+            animation: 'rotateReverse 12s linear infinite'
           }}>
-            <circle
-              cx="60" cy="60" r="42"
-              fill="none"
-              stroke="rgba(99, 102, 241, 0.15)"
-              strokeWidth="1"
-            />
-            <circle
-              cx="60" cy="60" r="42"
-              fill="none"
-              stroke="#6366f1"
-              strokeWidth="1.5"
-              strokeDasharray="15 25"
-              strokeLinecap="round"
-            />
+            {[22.5, 67.5, 112.5, 157.5].map((angle) => (
+              <line
+                key={angle}
+                x1="100" y1="25"
+                x2="100" y2="35"
+                stroke="rgba(255,255,255,0.15)"
+                strokeWidth="0.5"
+                transform={`rotate(${angle} 100 100)`}
+              />
+            ))}
           </svg>
 
-          {/* Inner Progress Ring */}
-          <svg style={{
-            position: 'absolute',
-            width: '120px',
-            height: '120px',
-            transform: 'rotate(-90deg)'
-          }}>
-            <circle
-              cx="60" cy="60" r="28"
-              fill="none"
-              stroke="rgba(139, 92, 246, 0.1)"
-              strokeWidth="3"
-            />
-            <circle
-              cx="60" cy="60" r="28"
-              fill="none"
-              stroke="url(#gradient)"
-              strokeWidth="3"
-              strokeDasharray="176"
-              strokeLinecap="round"
-              style={{ animation: 'dash 2s ease-in-out infinite' }}
-            />
-            <defs>
-              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#3b82f6" />
-                <stop offset="50%" stopColor="#8b5cf6" />
-                <stop offset="100%" stopColor="#06b6d4" />
-              </linearGradient>
-            </defs>
-          </svg>
-
-          {/* Center Hexagon */}
+          {/* Center Element */}
           <div style={{
             position: 'absolute',
             top: '50%',
             left: '50%',
-            transform: 'translate(-50%, -50%)',
-            animation: 'pulse 2s ease-in-out infinite'
+            transform: 'translate(-50%, -50%)'
           }}>
-            <svg width="36" height="36" viewBox="0 0 36 36">
-              <polygon
-                points="18,2 32,10 32,26 18,34 4,26 4,10"
-                fill="none"
-                stroke="url(#hexGradient)"
-                strokeWidth="1.5"
-              />
-              <polygon
-                points="18,8 26,13 26,23 18,28 10,23 10,13"
-                fill="rgba(59, 130, 246, 0.1)"
-                stroke="rgba(99, 102, 241, 0.5)"
-                strokeWidth="1"
-              />
-              <defs>
-                <linearGradient id="hexGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#3b82f6" />
-                  <stop offset="100%" stopColor="#8b5cf6" />
-                </linearGradient>
-              </defs>
-            </svg>
+            {/* Pulsing Core */}
+            <div style={{
+              width: '40px',
+              height: '40px',
+              border: '1px solid rgba(255,255,255,0.5)',
+              animation: 'scale 2s ease-in-out infinite'
+            }}>
+              <div style={{
+                width: '100%',
+                height: '100%',
+                border: '1px solid rgba(255,255,255,0.3)',
+                transform: 'rotate(45deg) scale(0.7)',
+                animation: 'scale 2s ease-in-out infinite reverse'
+              }} />
+            </div>
           </div>
 
-          {/* Orbiting Dots */}
-          {[0, 1, 2].map((i) => (
+          {/* Orbiting Points */}
+          {[0, 1, 2, 3].map((i) => (
             <div key={i} style={{
               position: 'absolute',
-              width: '120px',
-              height: '120px',
-              animation: `rotate ${4 + i}s linear infinite`,
-              animationDelay: `${i * 0.3}s`
+              width: '200px',
+              height: '200px',
+              animation: `rotate ${6 + i * 2}s linear infinite`,
+              animationDelay: `${i * 0.5}s`
             }}>
               <div style={{
                 position: 'absolute',
-                top: '0',
+                top: '15px',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                width: '6px',
-                height: '6px',
-                background: `hsl(${220 + i * 30}, 80%, 60%)`,
-                borderRadius: '50%',
-                boxShadow: `0 0 10px hsl(${220 + i * 30}, 80%, 60%)`
+                width: '4px',
+                height: '4px',
+                background: '#fff',
+                opacity: 0.8 - i * 0.15
               }} />
             </div>
           ))}
+
+          {/* Data Stream Lines */}
+          <svg style={{
+            position: 'absolute',
+            width: '200px',
+            height: '200px'
+          }}>
+            <path
+              d="M100,20 Q150,50 180,100 Q150,150 100,180 Q50,150 20,100 Q50,50 100,20"
+              fill="none"
+              stroke="rgba(255,255,255,0.1)"
+              strokeWidth="1"
+              strokeDasharray="5 10"
+              style={{ animation: 'trace 4s linear infinite' }}
+            />
+          </svg>
         </div>
 
-        {/* Loading Text */}
+        {/* Text Display */}
         <div style={{
+          marginTop: '40px',
           textAlign: 'center',
-          animation: 'fadeIn 0.6s ease'
+          animation: 'glitch 3s infinite'
         }}>
+          {/* Status Bars */}
+          <div style={{
+            display: 'flex',
+            gap: '3px',
+            justifyContent: 'center',
+            marginBottom: '16px'
+          }}>
+            {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+              <div key={i} style={{
+                width: '3px',
+                height: '12px',
+                background: '#fff',
+                opacity: 0.3,
+                animation: `wave 1s ease-in-out infinite`,
+                animationDelay: `${i * 0.1}s`
+              }} />
+            ))}
+          </div>
+
+          {/* Terminal Text */}
           <p style={{
-            fontSize: '0.9rem',
-            color: '#94a3b8',
-            fontWeight: '400',
+            fontSize: '11px',
+            color: 'rgba(255,255,255,0.5)',
             margin: 0,
-            letterSpacing: '3px',
+            letterSpacing: '4px',
             textTransform: 'uppercase'
           }}>
-            <span style={{ animation: 'dots 1.4s infinite', animationDelay: '0s' }}>.</span>
-            <span style={{ animation: 'dots 1.4s infinite', animationDelay: '0.2s' }}>.</span>
-            <span style={{ animation: 'dots 1.4s infinite', animationDelay: '0.4s' }}>.</span>
+            <span style={{ color: 'rgba(255,255,255,0.8)' }}>[</span>
+            LOADING
+            <span style={{ color: 'rgba(255,255,255,0.8)' }}>]</span>
+            <span style={{ animation: 'blink 1s step-end infinite' }}>_</span>
           </p>
         </div>
 
-        {/* Decorative Corner Lines */}
-        <svg style={{ position: 'absolute', top: '20px', left: '20px', width: '60px', height: '60px', opacity: 0.3 }}>
-          <path d="M0 40 L0 0 L40 0" fill="none" stroke="#3b82f6" strokeWidth="1" />
-        </svg>
-        <svg style={{ position: 'absolute', top: '20px', right: '20px', width: '60px', height: '60px', opacity: 0.3 }}>
-          <path d="M60 40 L60 0 L20 0" fill="none" stroke="#3b82f6" strokeWidth="1" />
-        </svg>
-        <svg style={{ position: 'absolute', bottom: '20px', left: '20px', width: '60px', height: '60px', opacity: 0.3 }}>
-          <path d="M0 20 L0 60 L40 60" fill="none" stroke="#3b82f6" strokeWidth="1" />
-        </svg>
-        <svg style={{ position: 'absolute', bottom: '20px', right: '20px', width: '60px', height: '60px', opacity: 0.3 }}>
-          <path d="M60 20 L60 60 L20 60" fill="none" stroke="#3b82f6" strokeWidth="1" />
-        </svg>
+        {/* Corner Brackets */}
+        {[
+          { top: '30px', left: '30px', transform: 'rotate(0deg)' },
+          { top: '30px', right: '30px', transform: 'rotate(90deg)' },
+          { bottom: '30px', right: '30px', transform: 'rotate(180deg)' },
+          { bottom: '30px', left: '30px', transform: 'rotate(270deg)' }
+        ].map((pos, i) => (
+          <svg key={i} style={{ position: 'absolute', ...pos, width: '30px', height: '30px' }}>
+            <path d="M0 20 L0 0 L20 0" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+          </svg>
+        ))}
+
+        {/* Coordinate Display */}
+        <div style={{
+          position: 'absolute',
+          bottom: '30px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          fontSize: '9px',
+          color: 'rgba(255,255,255,0.2)',
+          letterSpacing: '2px',
+          fontFamily: "'Courier New', monospace"
+        }}>
+          SYS.INIT
+        </div>
       </div>
     );
   }
