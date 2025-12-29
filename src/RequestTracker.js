@@ -563,31 +563,173 @@ const RequestTracker = () => {
                     </div>
 
                     <div style={styles.resultBody}>
-                      {request.data?.fullName && (
+                      {/* Full Details Grid */}
+                      <div style={styles.infoGrid}>
+                        {/* Reference Number */}
                         <div style={styles.infoItem}>
-                          <div style={styles.infoLabel}>الاسم</div>
-                          <div style={styles.infoValue}>{request.data.fullName}</div>
+                          <div style={styles.infoLabel}>رقم المرجع | מספר אסמכתא</div>
+                          <div style={{ ...styles.infoValue, fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                            {request.id || request._id}
+                          </div>
+                        </div>
+
+                        {/* Full Name */}
+                        {request.data?.fullName && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>الاسم الكامل | שם מלא</div>
+                            <div style={styles.infoValue}>{request.data.fullName}</div>
+                          </div>
+                        )}
+
+                        {/* ID Number */}
+                        {request.data?.idNumber && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>رقم الهوية | מספר זהות</div>
+                            <div style={styles.infoValue}>{request.data.idNumber}</div>
+                          </div>
+                        )}
+
+                        {/* Phone */}
+                        {request.data?.phone && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>رقم الهاتف | טלפון</div>
+                            <div style={styles.infoValue}>{request.data.phone}</div>
+                          </div>
+                        )}
+
+                        {/* Email */}
+                        {request.data?.email && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>البريد الإلكتروني | אימייל</div>
+                            <div style={styles.infoValue}>{request.data.email}</div>
+                          </div>
+                        )}
+
+                        {/* Address */}
+                        {request.data?.address && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>العنوان | כתובת</div>
+                            <div style={styles.infoValue}>{request.data.address}</div>
+                          </div>
+                        )}
+
+                        {/* Document Type - for documentAuth */}
+                        {request.data?.documentType && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>نوع المستند | סוג מסמך</div>
+                            <div style={styles.infoValue}>{request.data.documentType}</div>
+                          </div>
+                        )}
+
+                        {/* Copies - for documentAuth */}
+                        {request.data?.copies && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>عدد النسخ | מספר עותקים</div>
+                            <div style={styles.infoValue}>{request.data.copies}</div>
+                          </div>
+                        )}
+
+                        {/* Purpose - for officialDoc */}
+                        {request.data?.purpose && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>الغرض | מטרה</div>
+                            <div style={styles.infoValue}>{request.data.purpose}</div>
+                          </div>
+                        )}
+
+                        {/* Urgency */}
+                        {request.data?.urgency && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>الأولوية | דחיפות</div>
+                            <div style={styles.infoValue}>
+                              {request.data.urgency === 'urgent' ? 'عاجل | דחוף' : 'عادي | רגיל'}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Additional Notes from User */}
+                      {request.data?.notes && (
+                        <div style={{ ...styles.notesSection, background: '#e2e8f0', borderColor: '#718096' }}>
+                          <div style={{ ...styles.notesTitle, color: '#4a5568' }}>
+                            <span>📋</span>
+                            <span>ملاحظات الطلب | הערות הבקשה</span>
+                          </div>
+                          <p style={{ ...styles.notesText, color: '#4a5568' }}>{request.data.notes}</p>
                         </div>
                       )}
 
+                      {/* Attached Files from User */}
+                      {request.files && request.files.length > 0 && (
+                        <div style={{ marginTop: '16px' }}>
+                          <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1a365d', marginBottom: '10px' }}>
+                            📎 المرفقات المقدمة | קבצים מצורפים ({request.files.length})
+                          </div>
+                          {request.files.map((file, fileIndex) => (
+                            <div key={fileIndex} style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '10px 14px',
+                              background: '#f7fafc',
+                              border: '1px solid #e2e8f0',
+                              borderRadius: '6px',
+                              marginBottom: '8px'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span style={{ fontSize: '1.2rem' }}>📄</span>
+                                <div>
+                                  <div style={{ fontSize: '0.85rem', fontWeight: '500', color: '#2d3748' }}>
+                                    {file.originalname}
+                                  </div>
+                                  {file.size && (
+                                    <div style={{ fontSize: '0.75rem', color: '#718096' }}>
+                                      {(file.size / 1024).toFixed(1)} KB
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <a
+                                href={`${API_URL}/api/submission/${request.id || request._id}/file/${fileIndex}/download`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  padding: '6px 12px',
+                                  background: '#3b82f6',
+                                  color: '#fff',
+                                  borderRadius: '4px',
+                                  textDecoration: 'none',
+                                  fontSize: '0.8rem',
+                                  fontWeight: '500'
+                                }}
+                              >
+                                تحميل
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Admin Notes */}
                       {request.notes && (
                         <div style={styles.notesSection}>
                           <div style={styles.notesTitle}>
                             <span>📝</span>
-                            <span>ملاحظات الإدارة</span>
+                            <span>ملاحظات الإدارة | הערות המנהל</span>
                           </div>
                           <p style={styles.notesText}>{request.notes}</p>
                         </div>
                       )}
 
+                      {/* Admin Response File */}
                       {request.adminResponseFile && (
                         <div style={styles.downloadSection}>
                           <div style={styles.downloadInfo}>
                             <div style={styles.downloadIcon}>📎</div>
                             <div style={styles.downloadDetails}>
-                              <p style={styles.downloadName}>{request.adminResponseFile.originalname}</p>
+                              <p style={styles.downloadName}>ملف الرد | קובץ תגובה</p>
                               <p style={styles.downloadSize}>
-                                {(request.adminResponseFile.size / 1024).toFixed(1)} KB
+                                {request.adminResponseFile.originalname} - {(request.adminResponseFile.size / 1024).toFixed(1)} KB
                               </p>
                             </div>
                           </div>

@@ -21,30 +21,29 @@ cloudinary.config({
 // Helper function to upload file to Cloudinary
 const uploadToCloudinary = async (filePath, originalname) => {
   try {
-    // Determine if file is a raw document (PDF, DOC, etc.) that needs special handling
     const ext = path.extname(originalname).toLowerCase();
     const rawFormats = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.rtf'];
     const isRawFile = rawFormats.includes(ext);
 
-    // Clean the filename - remove non-ASCII characters for better compatibility
+    // Clean filename for Cloudinary
     const cleanFilename = originalname
-      .replace(/\.[^/.]+$/, '') // remove extension
-      .replace(/[^a-zA-Z0-9]/g, '_') // replace non-alphanumeric with underscore
-      .substring(0, 50); // limit length
+      .replace(/\.[^/.]+$/, '')
+      .replace(/[^a-zA-Z0-9]/g, '_')
+      .substring(0, 50);
 
     const uploadOptions = {
       folder: 'husniyya-uploads',
       public_id: `${Date.now()}-${cleanFilename}`,
       resource_type: isRawFile ? 'raw' : 'auto',
-      access_mode: 'public', // Ensure public access
-      type: 'upload' // Standard upload type (publicly accessible)
+      access_mode: 'public',
+      type: 'upload'
     };
 
-    console.log('Uploading to Cloudinary with options:', uploadOptions);
+    console.log('Uploading to Cloudinary:', uploadOptions);
     const result = await cloudinary.uploader.upload(filePath, uploadOptions);
-    console.log('Cloudinary upload result:', result);
+    console.log('Cloudinary result:', result.secure_url);
 
-    // Delete local file after upload
+    // Delete local temp file
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
@@ -512,7 +511,8 @@ app.delete('/api/admin/submission/:id/response-file', adminAuth, async (req, res
     // Delete the file from Cloudinary
     if (submission.adminResponseFile && submission.adminResponseFile.public_id) {
       try {
-        await cloudinary.uploader.destroy(submission.adminResponseFile.public_id);
+        await cloudinary.uploader.destroy(submission.adminResponseFile.public_id, { resource_type: 'raw' });
+        console.log('Deleted from Cloudinary:', submission.adminResponseFile.public_id);
       } catch (cloudError) {
         console.error('Cloudinary delete error:', cloudError);
       }
@@ -884,7 +884,7 @@ app.put('/api/admin/protocols/:id', adminAuth, upload.single('file'), async (req
       // Delete old file from Cloudinary
       if (protocol.file?.public_id) {
         try {
-          await cloudinary.uploader.destroy(protocol.file.public_id);
+          await cloudinary.uploader.destroy(protocol.file.public_id, { resource_type: 'raw' });
         } catch (e) {
           console.log('Could not delete old file from Cloudinary');
         }
@@ -930,7 +930,7 @@ app.delete('/api/admin/protocols/:id', adminAuth, async (req, res) => {
     // Delete file from Cloudinary
     if (protocol.file?.public_id) {
       try {
-        await cloudinary.uploader.destroy(protocol.file.public_id);
+        await cloudinary.uploader.destroy(protocol.file.public_id, { resource_type: 'raw' });
       } catch (e) {
         console.log('Could not delete file from Cloudinary');
       }
@@ -944,174 +944,29 @@ app.delete('/api/admin/protocols/:id', adminAuth, async (req, res) => {
   }
 });
 
-// ===== FILE DOWNLOAD ENDPOINTS =====
-// Helper function to generate a properly signed Cloudinary URL
-const generateSignedCloudinaryUrl = (publicId, resourceType = 'raw') => {
-  // Use Cloudinary SDK to generate a signed URL
-  const signedUrl = cloudinary.url(publicId, {
-    resource_type: resourceType,
-    type: 'upload',
-    sign_url: true,
-    secure: true
-  });
-  console.log('Generated signed URL:', signedUrl);
-  return signedUrl;
-};
-
-// Helper function to stream file from URL through our server
-const streamFileFromUrl = (fileUrl, filename, res) => {
-  return new Promise((resolve, reject) => {
-    const url = new URL(fileUrl);
-    const requestModule = url.protocol === 'https:' ? https : http;
-
-    console.log('Fetching file from:', fileUrl);
-
-    const options = {
-      hostname: url.hostname,
-      port: url.port || (url.protocol === 'https:' ? 443 : 80),
-      path: url.pathname + url.search,
-      method: 'GET',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
-    };
-
-    const request = requestModule.request(options, (response) => {
-      console.log('Response status:', response.statusCode);
-
-      // Handle redirects
-      if (response.statusCode === 301 || response.statusCode === 302 || response.statusCode === 307) {
-        const redirectUrl = response.headers.location;
-        console.log('Following redirect to:', redirectUrl);
-        streamFileFromUrl(redirectUrl, filename, res).then(resolve).catch(reject);
-        return;
-      }
-
-      if (response.statusCode === 401 || response.statusCode === 403) {
-        console.error('Got authorization error:', response.statusCode);
-        reject(new Error(`Authorization error: ${response.statusCode}`));
-        return;
-      }
-
-      if (response.statusCode !== 200) {
-        console.error('Failed to fetch file, status:', response.statusCode);
-        reject(new Error(`Failed to fetch file: ${response.statusCode}`));
-        return;
-      }
-
-      // Determine content type
-      const ext = path.extname(filename).toLowerCase();
-      const contentTypes = {
-        '.pdf': 'application/pdf',
-        '.doc': 'application/msword',
-        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        '.xls': 'application/vnd.ms-excel',
-        '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        '.ppt': 'application/vnd.ms-powerpoint',
-        '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        '.txt': 'text/plain',
-        '.rtf': 'application/rtf',
-        '.png': 'image/png',
-        '.jpg': 'image/jpeg',
-        '.jpeg': 'image/jpeg',
-        '.gif': 'image/gif'
-      };
-
-      const contentType = contentTypes[ext] || response.headers['content-type'] || 'application/octet-stream';
-
-      // Set headers for download
-      res.setHeader('Content-Type', contentType);
-      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
-
-      if (response.headers['content-length']) {
-        res.setHeader('Content-Length', response.headers['content-length']);
-      }
-
-      // Pipe the response
-      response.pipe(res);
-      response.on('end', () => resolve());
-      response.on('error', (err) => reject(err));
-    });
-
-    request.on('error', (err) => {
-      console.error('Request error:', err);
-      reject(err);
-    });
-
-    request.setTimeout(60000, () => {
-      request.destroy();
-      reject(new Error('Request timeout'));
-    });
-
-    request.end();
-  });
-};
-
-// Helper to download file using signed URL
-const downloadWithSignedUrl = async (publicId, resourceType, filename, res) => {
-  const signedUrl = generateSignedCloudinaryUrl(publicId, resourceType);
-  await streamFileFromUrl(signedUrl, filename, res);
-};
-
-// Download protocol file - streams file through server with fallback
+// ===== FILE DOWNLOAD ENDPOINTS (CLOUDINARY) =====
+// Download protocol file - redirect to Cloudinary URL
 app.get('/api/protocols/:id/download', async (req, res) => {
   try {
     const { id } = req.params;
     const protocol = await Protocol.findById(id);
 
-    if (!protocol || !protocol.file) {
+    if (!protocol || !protocol.file || !protocol.file.url) {
       return res.status(404).json({ error: 'Protocol file not found' });
     }
 
-    const filename = protocol.file.originalname || 'protocol.pdf';
-    const publicId = protocol.file.public_id;
-    const resourceType = protocol.file.resource_type || 'raw';
-
     console.log('=== Protocol Download ===');
-    console.log('Filename:', filename);
-    console.log('Public ID:', publicId);
-    console.log('Resource Type:', resourceType);
-    console.log('Original URL:', protocol.file.url);
+    console.log('Redirecting to:', protocol.file.url);
 
-    // Method 1: Try signed URL (best for strict mode accounts)
-    if (publicId) {
-      try {
-        console.log('Trying signed URL method...');
-        await downloadWithSignedUrl(publicId, resourceType, filename, res);
-        return;
-      } catch (signedError) {
-        console.log('Signed URL failed:', signedError.message);
-      }
-    }
-
-    // Method 2: Try direct URL
-    if (protocol.file.url && !res.headersSent) {
-      try {
-        console.log('Trying direct URL method...');
-        await streamFileFromUrl(protocol.file.url, filename, res);
-        return;
-      } catch (directError) {
-        console.log('Direct URL failed:', directError.message);
-      }
-    }
-
-    // If all methods fail
-    if (!res.headersSent) {
-      res.status(500).json({
-        error: 'Unable to download file',
-        details: 'All download methods failed. Please check Cloudinary settings.',
-        publicId: publicId
-      });
-    }
+    // Redirect to Cloudinary URL
+    res.redirect(protocol.file.url);
   } catch (error) {
     console.error('Protocol download error:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Failed to download protocol file' });
-    }
+    res.status(500).json({ error: 'Failed to download protocol file' });
   }
 });
 
-// Download submission file (attached documents) - streams through server with fallback
+// Download submission file (attached documents)
 app.get('/api/submission/:id/file/:fileIndex/download', async (req, res) => {
   try {
     const { id, fileIndex } = req.params;
@@ -1122,94 +977,37 @@ app.get('/api/submission/:id/file/:fileIndex/download', async (req, res) => {
     }
 
     const file = submission.files[fileIndex];
-    const filename = file.originalname || 'document.pdf';
-    const publicId = file.public_id;
-    const resourceType = file.resource_type || 'raw';
+    if (!file.url) {
+      return res.status(404).json({ error: 'File URL not found' });
+    }
 
     console.log('=== Submission File Download ===');
-    console.log('Filename:', filename);
-    console.log('Public ID:', publicId);
+    console.log('Redirecting to:', file.url);
 
-    // Method 1: Try signed URL first
-    if (publicId) {
-      try {
-        await downloadWithSignedUrl(publicId, resourceType, filename, res);
-        return;
-      } catch (signedError) {
-        console.log('Signed URL failed:', signedError.message);
-      }
-    }
-
-    // Method 2: Try direct URL
-    if (file.url && !res.headersSent) {
-      try {
-        await streamFileFromUrl(file.url, filename, res);
-        return;
-      } catch (directError) {
-        console.log('Direct URL failed:', directError.message);
-      }
-    }
-
-    // If all methods fail
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Unable to download file' });
-    }
+    res.redirect(file.url);
   } catch (error) {
     console.error('Submission file download error:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Failed to download file' });
-    }
+    res.status(500).json({ error: 'Failed to download file' });
   }
 });
 
-// Download admin response file - streams through server with fallback
+// Download admin response file
 app.get('/api/submission/:id/response/download', async (req, res) => {
   try {
     const { id } = req.params;
     const submission = await Submission.findById(id);
 
-    if (!submission || !submission.adminResponseFile) {
+    if (!submission || !submission.adminResponseFile || !submission.adminResponseFile.url) {
       return res.status(404).json({ error: 'Response file not found' });
     }
 
-    const file = submission.adminResponseFile;
-    const filename = file.originalname || 'response.pdf';
-    const publicId = file.public_id;
-    const resourceType = file.resource_type || 'raw';
-
     console.log('=== Response File Download ===');
-    console.log('Filename:', filename);
-    console.log('Public ID:', publicId);
+    console.log('Redirecting to:', submission.adminResponseFile.url);
 
-    // Method 1: Try signed URL first
-    if (publicId) {
-      try {
-        await downloadWithSignedUrl(publicId, resourceType, filename, res);
-        return;
-      } catch (signedError) {
-        console.log('Signed URL failed:', signedError.message);
-      }
-    }
-
-    // Method 2: Try direct URL
-    if (file.url && !res.headersSent) {
-      try {
-        await streamFileFromUrl(file.url, filename, res);
-        return;
-      } catch (directError) {
-        console.log('Direct URL failed:', directError.message);
-      }
-    }
-
-    // If all methods fail
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Unable to download file' });
-    }
+    res.redirect(submission.adminResponseFile.url);
   } catch (error) {
     console.error('Response file download error:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Failed to download response file' });
-    }
+    res.status(500).json({ error: 'Failed to download response file' });
   }
 });
 
@@ -1219,7 +1017,7 @@ app.get('/api/submission/:id/response-file-info', async (req, res) => {
     const { id } = req.params;
     const submission = await Submission.findById(id);
 
-    if (!submission || !submission.adminResponseFile || !submission.adminResponseFile.url) {
+    if (!submission || !submission.adminResponseFile) {
       return res.status(404).json({ error: 'Response file not found' });
     }
 
