@@ -979,14 +979,27 @@ app.get('/api/submission/:id/file/:fileIndex/download', async (req, res) => {
     }
 
     const file = submission.files[fileIndex];
-    if (!file.url) {
-      return res.status(404).json({ error: 'File URL not found' });
+    console.log('=== Submission File Download ===');
+    console.log('File data:', JSON.stringify(file, null, 2));
+
+    // Check for Cloudinary URL first
+    if (file.url) {
+      console.log('Redirecting to Cloudinary URL:', file.url);
+      return res.redirect(file.url);
     }
 
-    console.log('=== Submission File Download ===');
-    console.log('Redirecting to:', file.url);
+    // Fallback: check for local file path (old files)
+    if (file.path && fs.existsSync(file.path)) {
+      console.log('Serving local file:', file.path);
+      return res.download(file.path, file.originalname);
+    }
 
-    res.redirect(file.url);
+    // No valid file source found
+    console.log('No valid file URL or path found');
+    return res.status(404).json({
+      error: 'File not available',
+      details: 'This file may have been uploaded before cloud storage was configured. Please contact admin.'
+    });
   } catch (error) {
     console.error('Submission file download error:', error);
     res.status(500).json({ error: 'Failed to download file' });
@@ -999,14 +1012,32 @@ app.get('/api/submission/:id/response/download', async (req, res) => {
     const { id } = req.params;
     const submission = await Submission.findById(id);
 
-    if (!submission || !submission.adminResponseFile || !submission.adminResponseFile.url) {
+    if (!submission || !submission.adminResponseFile) {
       return res.status(404).json({ error: 'Response file not found' });
     }
 
+    const file = submission.adminResponseFile;
     console.log('=== Response File Download ===');
-    console.log('Redirecting to:', submission.adminResponseFile.url);
+    console.log('File data:', JSON.stringify(file, null, 2));
 
-    res.redirect(submission.adminResponseFile.url);
+    // Check for Cloudinary URL first
+    if (file.url) {
+      console.log('Redirecting to Cloudinary URL:', file.url);
+      return res.redirect(file.url);
+    }
+
+    // Fallback: check for local file path (old files)
+    if (file.path && fs.existsSync(file.path)) {
+      console.log('Serving local file:', file.path);
+      return res.download(file.path, file.originalname);
+    }
+
+    // No valid file source found
+    console.log('No valid file URL or path found');
+    return res.status(404).json({
+      error: 'Response file not available',
+      details: 'This file may have been uploaded before cloud storage was configured. Please re-upload the response file.'
+    });
   } catch (error) {
     console.error('Response file download error:', error);
     res.status(500).json({ error: 'Failed to download response file' });
