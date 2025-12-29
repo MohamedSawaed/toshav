@@ -790,21 +790,154 @@ const RequestTracker = () => {
                     </div>
 
                     <div style={styles.resultBody}>
+                      {/* Full Details Grid */}
                       <div style={styles.infoGrid}>
-                        {requestData.data?.fullName && (
-                          <div style={styles.infoItem}>
-                            <div style={styles.infoLabel}>الاسم | שם</div>
-                            <div style={styles.infoValue}>{requestData.data.fullName}</div>
-                          </div>
-                        )}
+                        {/* Reference Number */}
                         <div style={styles.infoItem}>
                           <div style={styles.infoLabel}>رقم المرجع | מספר אסמכתא</div>
                           <div style={{ ...styles.infoValue, fontFamily: 'monospace', fontSize: '0.85rem' }}>
-                            {requestData.id}
+                            {requestData.id || requestData._id}
                           </div>
                         </div>
+
+                        {/* Full Name */}
+                        {requestData.data?.fullName && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>الاسم الكامل | שם מלא</div>
+                            <div style={styles.infoValue}>{requestData.data.fullName}</div>
+                          </div>
+                        )}
+
+                        {/* ID Number */}
+                        {requestData.data?.idNumber && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>رقم الهوية | מספר זהות</div>
+                            <div style={styles.infoValue}>{requestData.data.idNumber}</div>
+                          </div>
+                        )}
+
+                        {/* Phone */}
+                        {requestData.data?.phone && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>رقم الهاتف | טלפון</div>
+                            <div style={styles.infoValue}>{requestData.data.phone}</div>
+                          </div>
+                        )}
+
+                        {/* Email */}
+                        {requestData.data?.email && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>البريد الإلكتروني | אימייל</div>
+                            <div style={styles.infoValue}>{requestData.data.email}</div>
+                          </div>
+                        )}
+
+                        {/* Address */}
+                        {requestData.data?.address && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>العنوان | כתובת</div>
+                            <div style={styles.infoValue}>{requestData.data.address}</div>
+                          </div>
+                        )}
+
+                        {/* Document Type */}
+                        {requestData.data?.documentType && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>نوع المستند | סוג מסמך</div>
+                            <div style={styles.infoValue}>{requestData.data.documentType}</div>
+                          </div>
+                        )}
+
+                        {/* Copies */}
+                        {requestData.data?.copies && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>عدد النسخ | מספר עותקים</div>
+                            <div style={styles.infoValue}>{requestData.data.copies}</div>
+                          </div>
+                        )}
+
+                        {/* Purpose */}
+                        {requestData.data?.purpose && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>الغرض | מטרה</div>
+                            <div style={styles.infoValue}>{requestData.data.purpose}</div>
+                          </div>
+                        )}
+
+                        {/* Urgency */}
+                        {requestData.data?.urgency && (
+                          <div style={styles.infoItem}>
+                            <div style={styles.infoLabel}>الأولوية | דחיפות</div>
+                            <div style={styles.infoValue}>
+                              {requestData.data.urgency === 'urgent' ? 'عاجل | דחוף' : 'عادي | רגיל'}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
+                      {/* User Notes */}
+                      {requestData.data?.notes && (
+                        <div style={{ ...styles.notesSection, background: '#e2e8f0', borderColor: '#718096' }}>
+                          <div style={{ ...styles.notesTitle, color: '#4a5568' }}>
+                            <span>📋</span>
+                            <span>ملاحظات الطلب | הערות הבקשה</span>
+                          </div>
+                          <p style={{ ...styles.notesText, color: '#4a5568' }}>{requestData.data.notes}</p>
+                        </div>
+                      )}
+
+                      {/* Attached Files from User */}
+                      {requestData.files && requestData.files.length > 0 && (
+                        <div style={{ marginTop: '16px' }}>
+                          <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1a365d', marginBottom: '10px' }}>
+                            📎 المرفقات المقدمة | קבצים מצורפים ({requestData.files.length})
+                          </div>
+                          {requestData.files.map((file, fileIndex) => (
+                            <div key={fileIndex} style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '10px 14px',
+                              background: '#f7fafc',
+                              border: '1px solid #e2e8f0',
+                              borderRadius: '6px',
+                              marginBottom: '8px'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span style={{ fontSize: '1.2rem' }}>📄</span>
+                                <div>
+                                  <div style={{ fontSize: '0.85rem', fontWeight: '500', color: '#2d3748' }}>
+                                    {file.originalname}
+                                  </div>
+                                  {file.size && (
+                                    <div style={{ fontSize: '0.75rem', color: '#718096' }}>
+                                      {(file.size / 1024).toFixed(1)} KB
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <a
+                                href={`${API_URL}/api/submission/${requestData.id || requestData._id}/file/${fileIndex}/download`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  padding: '6px 12px',
+                                  background: '#3b82f6',
+                                  color: '#fff',
+                                  borderRadius: '4px',
+                                  textDecoration: 'none',
+                                  fontSize: '0.8rem',
+                                  fontWeight: '500'
+                                }}
+                              >
+                                تحميل
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Admin Notes */}
                       {requestData.notes && (
                         <div style={styles.notesSection}>
                           <div style={styles.notesTitle}>
@@ -815,14 +948,15 @@ const RequestTracker = () => {
                         </div>
                       )}
 
+                      {/* Admin Response File */}
                       {requestData.adminResponseFile && (
                         <div style={styles.downloadSection}>
                           <div style={styles.downloadInfo}>
                             <div style={styles.downloadIcon}>📎</div>
                             <div style={styles.downloadDetails}>
-                              <p style={styles.downloadName}>{requestData.adminResponseFile.originalname}</p>
+                              <p style={styles.downloadName}>ملف الرد | קובץ תגובה</p>
                               <p style={styles.downloadSize}>
-                                {(requestData.adminResponseFile.size / 1024).toFixed(1)} KB
+                                {requestData.adminResponseFile.originalname} - {(requestData.adminResponseFile.size / 1024).toFixed(1)} KB
                               </p>
                             </div>
                           </div>
