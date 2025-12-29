@@ -797,59 +797,86 @@ const AdminDashboard = () => {
         ) : protocols.length === 0 ? (
           <div style={styles.emptyState}>لا توجد بروتوكولات حالياً</div>
         ) : (
-          <div style={styles.tendersGrid}>
-            {protocols.map(protocol => (
-              <div key={protocol.id || protocol._id} style={styles.protocolCard}>
-                <div style={styles.tenderHeader}>
-                  <h3 style={styles.protocolTitle}>{protocol.title}</h3>
-                  <span style={{
-                    ...styles.statusBadge,
-                    ...(protocol.status === 'published' && styles.statusApproved),
-                    ...(protocol.status === 'draft' && styles.statusPending)
-                  }}>
-                    {protocol.status === 'published' ? 'منشور' : 'مسودة'}
-                  </span>
-                </div>
-                {protocol.titleHe && <p style={styles.protocolTitleHe}>{protocol.titleHe}</p>}
-                <div style={styles.protocolMeta}>
-                  <div style={styles.protocolMetaItem}>
-                    <span>📅</span>
-                    <span>تاريخ الجلسة: {new Date(protocol.meetingDate).toLocaleDateString('ar')}</span>
-                  </div>
-                  {protocol.meetingNumber && (
-                    <div style={styles.protocolMetaItem}>
-                      <span>🔢</span>
-                      <span>رقم الجلسة: {protocol.meetingNumber}</span>
-                    </div>
-                  )}
-                </div>
-                {protocol.description && <p style={styles.tenderDesc}>{protocol.description}</p>}
-                {protocol.file && (
-                  <div style={styles.protocolFileInfo}>
-                    <span>📎</span>
-                    <a
-                      href={`${API_URL}/protocols/${protocol.id || protocol._id}/download`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={styles.protocolFileLink}
-                    >
-                      {protocol.file.originalname || 'تحميل الملف'}
-                    </a>
-                  </div>
-                )}
-                <div style={styles.tenderActions}>
-                  <button
-                    onClick={() => { setEditingProtocol(protocol); setShowProtocolForm(true); }}
-                    style={styles.editProtocolBtn}
-                  >
-                    تعديل
-                  </button>
-                  <button onClick={() => deleteProtocol(protocol.id || protocol._id)} style={styles.deleteTenderBtn}>
-                    حذف
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div style={styles.protocolsTableContainer}>
+            <table style={styles.protocolsTable}>
+              <thead>
+                <tr style={styles.protocolsTableHeader}>
+                  <th style={styles.protocolsTh}>#</th>
+                  <th style={styles.protocolsTh}>رقم الجلسة</th>
+                  <th style={styles.protocolsTh}>التاريخ</th>
+                  <th style={styles.protocolsTh}>العنوان</th>
+                  <th style={styles.protocolsTh}>الحالة</th>
+                  <th style={styles.protocolsTh}>الملف</th>
+                  <th style={styles.protocolsTh}>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {protocols.map((protocol, index) => (
+                  <tr key={protocol.id || protocol._id} style={styles.protocolsTableRow}>
+                    <td style={styles.protocolsTd}>{index + 1}</td>
+                    <td style={styles.protocolsTd}>
+                      <span style={styles.protocolNumber}>{protocol.meetingNumber || '-'}</span>
+                    </td>
+                    <td style={styles.protocolsTd}>
+                      <span style={styles.protocolDate}>
+                        {new Date(protocol.meetingDate).toLocaleDateString('he-IL')}
+                      </span>
+                    </td>
+                    <td style={styles.protocolsTdTitle}>
+                      <div style={styles.protocolTitleCell}>
+                        <span style={styles.protocolTitleAr}>{protocol.title}</span>
+                        {protocol.titleHe && (
+                          <span style={styles.protocolTitleHeSmall}>{protocol.titleHe}</span>
+                        )}
+                        {protocol.description && (
+                          <span style={styles.protocolDescSmall}>{protocol.description}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td style={styles.protocolsTd}>
+                      <span style={{
+                        ...styles.protocolStatusBadge,
+                        ...(protocol.status === 'published' ? styles.protocolStatusPublished : styles.protocolStatusDraft)
+                      }}>
+                        {protocol.status === 'published' ? 'منشور' : 'مسودة'}
+                      </span>
+                    </td>
+                    <td style={styles.protocolsTd}>
+                      {protocol.file ? (
+                        <a
+                          href={`${API_URL}/api/protocols/${protocol.id || protocol._id}/download`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={styles.protocolDownloadBtn}
+                        >
+                          📥 تحميل
+                        </a>
+                      ) : (
+                        <span style={styles.noFile}>-</span>
+                      )}
+                    </td>
+                    <td style={styles.protocolsTd}>
+                      <div style={styles.protocolActionsCell}>
+                        <button
+                          onClick={() => { setEditingProtocol(protocol); setShowProtocolForm(true); }}
+                          style={styles.protocolEditBtn}
+                          title="تعديل"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => deleteProtocol(protocol.id || protocol._id)}
+                          style={styles.protocolDeleteBtn}
+                          title="حذف"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
@@ -2070,6 +2097,138 @@ const styles = {
     cursor: 'pointer',
     fontSize: '13px',
     fontFamily: "'Tajawal', sans-serif",
+  },
+  // New Protocols Table Styles
+  protocolsTableContainer: {
+    background: '#fff',
+    borderRadius: '12px',
+    overflow: 'hidden',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    border: '1px solid #e2e8f0',
+  },
+  protocolsTable: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    fontFamily: "'Tajawal', sans-serif",
+  },
+  protocolsTableHeader: {
+    background: 'linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%)',
+  },
+  protocolsTh: {
+    padding: '14px 12px',
+    textAlign: 'right',
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: '13px',
+    borderBottom: '2px solid #1a365d',
+    whiteSpace: 'nowrap',
+  },
+  protocolsTableRow: {
+    borderBottom: '1px solid #e2e8f0',
+    transition: 'background 0.2s',
+  },
+  protocolsTd: {
+    padding: '12px',
+    textAlign: 'right',
+    fontSize: '13px',
+    color: '#334155',
+    verticalAlign: 'middle',
+  },
+  protocolsTdTitle: {
+    padding: '12px',
+    textAlign: 'right',
+    fontSize: '13px',
+    color: '#334155',
+    verticalAlign: 'middle',
+    maxWidth: '300px',
+  },
+  protocolTitleCell: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+  protocolTitleAr: {
+    fontWeight: '600',
+    color: '#1e293b',
+    fontSize: '14px',
+  },
+  protocolTitleHeSmall: {
+    fontSize: '12px',
+    color: '#64748b',
+    direction: 'rtl',
+  },
+  protocolDescSmall: {
+    fontSize: '11px',
+    color: '#94a3b8',
+    marginTop: '2px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    maxWidth: '280px',
+  },
+  protocolNumber: {
+    fontWeight: '700',
+    color: '#1e3a5f',
+    fontSize: '14px',
+  },
+  protocolDate: {
+    color: '#64748b',
+    fontSize: '13px',
+    fontFamily: 'monospace',
+  },
+  protocolStatusBadge: {
+    padding: '4px 10px',
+    borderRadius: '12px',
+    fontSize: '11px',
+    fontWeight: '600',
+    display: 'inline-block',
+  },
+  protocolStatusPublished: {
+    background: '#dcfce7',
+    color: '#16a34a',
+  },
+  protocolStatusDraft: {
+    background: '#fef3c7',
+    color: '#d97706',
+  },
+  protocolDownloadBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '6px 12px',
+    background: '#3b82f6',
+    color: '#fff',
+    borderRadius: '6px',
+    textDecoration: 'none',
+    fontSize: '12px',
+    fontWeight: '500',
+    transition: 'background 0.2s',
+  },
+  noFile: {
+    color: '#94a3b8',
+  },
+  protocolActionsCell: {
+    display: 'flex',
+    gap: '6px',
+    justifyContent: 'center',
+  },
+  protocolEditBtn: {
+    padding: '6px 10px',
+    background: '#f1f5f9',
+    border: '1px solid #e2e8f0',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    transition: 'all 0.2s',
+  },
+  protocolDeleteBtn: {
+    padding: '6px 10px',
+    background: '#fef2f2',
+    border: '1px solid #fecaca',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    transition: 'all 0.2s',
   },
 };
 
