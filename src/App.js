@@ -442,7 +442,6 @@ function App() {
         <header style={styles.header}>
           <div style={styles.headerContent}>
             <div style={styles.logoSection}>
-              <div style={styles.emblem}>ح</div>
               <div style={styles.titleSection}>
                 <h1 style={styles.titleAr}>اللجنة المحلية - الحسينية</h1>
                 <p style={styles.titleHe}>הוועדה המקומית חוסניה</p>
