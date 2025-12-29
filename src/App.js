@@ -459,12 +459,6 @@ function App() {
 
         {/* Main Content */}
         <main style={styles.main}>
-          {/* Welcome Section */}
-          <div style={styles.welcomeSection}>
-            <h2 style={styles.welcomeTitle}>الخدمات الإلكترونية الرسمية</h2>
-            <p style={styles.welcomeSubtitle}>שירותים דיגיטליים רשמיים | بوابة الخدمات الحكومية</p>
-          </div>
-
           {/* Info Box */}
           <div style={styles.infoBox}>
             <span style={styles.infoIcon}>ℹ</span>
