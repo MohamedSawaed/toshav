@@ -25,15 +25,15 @@ const uploadToCloudinary = async (filePath, originalname) => {
     const rawFormats = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.rtf'];
     const isRawFile = rawFormats.includes(ext);
 
-    // Clean filename for Cloudinary
-    const cleanFilename = originalname
-      .replace(/\.[^/.]+$/, '')
-      .replace(/[^a-zA-Z0-9]/g, '_')
-      .substring(0, 50);
+    // Keep original filename (without extension) - Cloudinary supports UTF-8
+    const filenameWithoutExt = originalname.replace(/\.[^/.]+$/, '');
 
+    // Use original filename with timestamp prefix for uniqueness
     const uploadOptions = {
       folder: 'husniyya-uploads',
-      public_id: `${Date.now()}-${cleanFilename}`,
+      public_id: `${Date.now()}-${filenameWithoutExt}`,
+      use_filename: true,
+      unique_filename: false,
       resource_type: isRawFile ? 'raw' : 'auto',
       access_mode: 'public',
       type: 'upload'
