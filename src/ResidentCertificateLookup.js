@@ -112,6 +112,7 @@ export default function ResidentCertificateLookup() {
   const [pageNumber, setPageNumber] = useState(null);
   const [pdfData, setPdfData] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(true);
+  const [conditionsAccepted, setConditionsAccepted] = useState(false);
 
   // Inject styles on mount
   useEffect(() => {
@@ -288,9 +289,27 @@ export default function ResidentCertificateLookup() {
               <span>חוזה שכירות דירה/בית</span>
             </div>
           </div>
+
+          {/* Confirmation Checkbox */}
+          <div style={styles.confirmationSection}>
+            <label style={styles.confirmationLabel}>
+              <input
+                type="checkbox"
+                checked={conditionsAccepted}
+                onChange={(e) => setConditionsAccepted(e.target.checked)}
+                style={styles.confirmationCheckbox}
+              />
+              <span style={styles.confirmationText}>
+                אני מאשר/ת שאני עומד/ת בכל התנאים הנ"ל
+                <br />
+                <span style={{ fontSize: '13px', color: '#718096' }}>أؤكد أنني أستوفي جميع الشروط المذكورة أعلاه</span>
+              </span>
+            </label>
+          </div>
         </div>
 
-        {/* Main Card */}
+        {/* Main Card - Only show when conditions accepted */}
+        {conditionsAccepted && (
         <main style={styles.card}>
 
           <div style={styles.cardContent}>
@@ -419,6 +438,7 @@ export default function ResidentCertificateLookup() {
             )}
           </div>
         </main>
+        )}
 
         {/* Footer */}
         <footer style={styles.footer}>
@@ -798,5 +818,34 @@ const styles = {
     fontSize: '16px',
     fontWeight: '600',
     flexShrink: 0,
+  },
+  confirmationSection: {
+    marginTop: '24px',
+    paddingTop: '20px',
+    borderTop: '2px solid #e2e8f0',
+  },
+  confirmationLabel: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '14px',
+    cursor: 'pointer',
+    padding: '16px',
+    background: '#f0fff4',
+    borderRadius: '12px',
+    border: '2px solid #48bb78',
+    transition: 'all 0.2s ease',
+  },
+  confirmationCheckbox: {
+    width: '22px',
+    height: '22px',
+    accentColor: '#48bb78',
+    cursor: 'pointer',
+    marginTop: '2px',
+  },
+  confirmationText: {
+    fontSize: '15px',
+    fontWeight: '600',
+    color: '#276749',
+    lineHeight: '1.6',
   },
 };
