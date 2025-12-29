@@ -355,7 +355,8 @@ app.get('/api/track/:referenceNumber', async (req, res) => {
           status: submission.status,
           submittedAt: submission.submittedAt,
           notes: submission.notes || null,
-          data: { fullName: submission.data?.fullName || submission.data?.ownerName || null },
+          data: submission.data || {},
+          files: submission.files || [],
           adminResponseFile: submission.adminResponseFile || null
         }
       });
@@ -390,7 +391,8 @@ app.get('/api/track-by-id/:idNumber', async (req, res) => {
           status: s.status,
           submittedAt: s.submittedAt,
           notes: s.notes || null,
-          data: { fullName: s.data?.fullName || s.data?.ownerName || null },
+          data: s.data || {},
+          files: s.files || [],
           adminResponseFile: s.adminResponseFile || null
         }))
       });
