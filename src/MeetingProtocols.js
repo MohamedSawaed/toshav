@@ -7,6 +7,7 @@ const MeetingProtocols = () => {
   const [protocols, setProtocols] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProtocol, setSelectedProtocol] = useState(null);
+  const [downloading, setDownloading] = useState(null);
 
   useEffect(() => {
     fetchProtocols();
@@ -32,6 +33,35 @@ const MeetingProtocols = () => {
   const formatDateHe = (dateStr) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('he-IL', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
+  // Handle file download properly
+  const handleDownload = async (protocol) => {
+    if (!protocol.file || !protocol.file.url) {
+      alert('لا يوجد ملف للتحميل');
+      return;
+    }
+
+    const protocolId = protocol.id || protocol._id;
+    setDownloading(protocolId);
+
+    try {
+      // Use the dedicated download endpoint
+      const downloadUrl = `${API_URL}/protocols/${protocolId}/download`;
+
+      // Create a hidden link and trigger download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', protocol.file.originalname || 'protocol.pdf');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('حدث خطأ أثناء تحميل الملف');
+    } finally {
+      setTimeout(() => setDownloading(null), 1000);
+    }
   };
 
   return (
@@ -192,20 +222,23 @@ const MeetingProtocols = () => {
                 {/* Action Buttons */}
                 <div style={styles.cardActions}>
                   {protocol.file && protocol.file.url && (
-                    <a
-                      href={protocol.file.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={() => handleDownload(protocol)}
+                      disabled={downloading === (protocol.id || protocol._id)}
                       className="view-btn"
-                      style={styles.viewBtn}
+                      style={{
+                        ...styles.viewBtn,
+                        opacity: downloading === (protocol.id || protocol._id) ? 0.7 : 1,
+                        cursor: downloading === (protocol.id || protocol._id) ? 'wait' : 'pointer'
+                      }}
                     >
                       <svg viewBox="0 0 24 24" fill="none" style={{ width: 18, height: 18 }}>
                         <path d="M21 15V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         <path d="M7 10L12 15L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         <path d="M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                      <span>تحميل البروتوكول | הורדת הפרוטוקול</span>
-                    </a>
+                      <span>{downloading === (protocol.id || protocol._id) ? 'جاري التحميل...' : 'تحميل البروتوكول | הורדת הפרוטוקול'}</span>
+                    </button>
                   )}
                   <button
                     className="download-btn"
@@ -307,19 +340,23 @@ const MeetingProtocols = () => {
             {/* Modal Footer */}
             <div style={styles.modalFooter}>
               {selectedProtocol.file && selectedProtocol.file.url && (
-                <a
-                  href={selectedProtocol.file.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={styles.modalDownloadBtn}
+                <button
+                  onClick={() => handleDownload(selectedProtocol)}
+                  disabled={downloading === (selectedProtocol.id || selectedProtocol._id)}
+                  style={{
+                    ...styles.modalDownloadBtn,
+                    opacity: downloading === (selectedProtocol.id || selectedProtocol._id) ? 0.7 : 1,
+                    cursor: downloading === (selectedProtocol.id || selectedProtocol._id) ? 'wait' : 'pointer',
+                    border: 'none'
+                  }}
                 >
                   <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}>
                     <path d="M21 15V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M7 10L12 15L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  تحميل البروتوكول | הורדת הפרוטוקול
-                </a>
+                  {downloading === (selectedProtocol.id || selectedProtocol._id) ? 'جاري التحميل...' : 'تحميل البروتوكول | הורדת הפרוטוקול'}
+                </button>
               )}
               <button
                 style={styles.closeModalBtn}

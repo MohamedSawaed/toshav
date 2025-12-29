@@ -416,7 +416,10 @@ const AdminDashboard = () => {
                 {selectedSubmission.files.map((file, index) => (
                   <div key={index} style={styles.fileItem}>
                     <span>📎 {file.originalname}</span>
-                    <a href={file.url || `${API_URL.replace('/api', '')}/${file.path}`} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={`${API_URL}/download?url=${encodeURIComponent(file.url)}&filename=${encodeURIComponent(file.originalname)}`}
+                      style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: '600' }}
+                    >
                       تحميل
                     </a>
                   </div>
@@ -441,9 +444,7 @@ const AdminDashboard = () => {
                   </div>
                   <div style={styles.responseFileActions}>
                     <a
-                      href={selectedSubmission.adminResponseFile.url || `${API_URL.replace('/api', '')}/${selectedSubmission.adminResponseFile.path}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={`${API_URL}/download?url=${encodeURIComponent(selectedSubmission.adminResponseFile.url)}&filename=${encodeURIComponent(selectedSubmission.adminResponseFile.originalname)}`}
                       style={styles.downloadResponseBtn}
                     >
                       تحميل
@@ -822,7 +823,10 @@ const AdminDashboard = () => {
                 {protocol.file && protocol.file.url && (
                   <div style={styles.protocolFileInfo}>
                     <span>📎</span>
-                    <a href={protocol.file.url} target="_blank" rel="noopener noreferrer" style={styles.protocolFileLink}>
+                    <a
+                      href={`${API_URL}/protocols/${protocol.id || protocol._id}/download`}
+                      style={styles.protocolFileLink}
+                    >
                       {protocol.file.originalname || 'تحميل الملف'}
                     </a>
                   </div>

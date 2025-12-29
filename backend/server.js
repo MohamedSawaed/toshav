@@ -19,20 +19,35 @@ cloudinary.config({
 // Helper function to upload file to Cloudinary
 const uploadToCloudinary = async (filePath, originalname) => {
   try {
-    const result = await cloudinary.uploader.upload(filePath, {
+    // Determine if file is a raw document (PDF, DOC, etc.) that needs special handling
+    const ext = path.extname(originalname).toLowerCase();
+    const rawFormats = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.rtf'];
+    const isRawFile = rawFormats.includes(ext);
+
+    const uploadOptions = {
       folder: 'husniyya-uploads',
-      resource_type: 'auto',
-      public_id: `${Date.now()}-${originalname.replace(/\.[^/.]+$/, '')}`
-    });
+      public_id: `${Date.now()}-${originalname.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_')}`,
+      resource_type: isRawFile ? 'raw' : 'auto',
+      // For raw files, preserve the original format
+      ...(isRawFile && { format: ext.slice(1) })
+    };
+
+    console.log('Uploading to Cloudinary with options:', uploadOptions);
+    const result = await cloudinary.uploader.upload(filePath, uploadOptions);
+    console.log('Cloudinary upload result:', result);
+
     // Delete local file after upload
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
+
     return {
       url: result.secure_url,
       public_id: result.public_id,
       originalname: originalname,
-      size: result.bytes
+      size: result.bytes,
+      format: result.format || ext.slice(1),
+      resource_type: result.resource_type
     };
   } catch (error) {
     console.error('Cloudinary upload error:', error);
@@ -918,6 +933,106 @@ app.delete('/api/admin/protocols/:id', adminAuth, async (req, res) => {
   } catch (error) {
     console.error('Error deleting protocol:', error);
     res.status(500).json({ error: 'Failed to delete protocol' });
+  }
+});
+
+// ===== FILE DOWNLOAD ENDPOINT =====
+// This endpoint properly handles file downloads from Cloudinary
+app.get('/api/download', async (req, res) => {
+  try {
+    const { url, filename } = req.query;
+
+    if (!url) {
+      return res.status(400).json({ error: 'URL is required' });
+    }
+
+    // Validate that the URL is from Cloudinary
+    if (!url.includes('cloudinary.com') && !url.includes('res.cloudinary.com')) {
+      return res.status(400).json({ error: 'Invalid file URL' });
+    }
+
+    // Fetch the file from Cloudinary
+    const https = require('https');
+    const http = require('http');
+    const protocol = url.startsWith('https') ? https : http;
+
+    // Make a request to get the file
+    protocol.get(url, (response) => {
+      // Handle redirects
+      if (response.statusCode === 301 || response.statusCode === 302) {
+        const redirectUrl = response.headers.location;
+        protocol.get(redirectUrl, (redirectResponse) => {
+          const downloadFilename = filename || 'download';
+          res.setHeader('Content-Type', redirectResponse.headers['content-type'] || 'application/octet-stream');
+          res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadFilename)}"`);
+          if (redirectResponse.headers['content-length']) {
+            res.setHeader('Content-Length', redirectResponse.headers['content-length']);
+          }
+          redirectResponse.pipe(res);
+        }).on('error', (error) => {
+          console.error('Download redirect error:', error);
+          res.status(500).json({ error: 'Failed to download file' });
+        });
+        return;
+      }
+
+      if (response.statusCode !== 200) {
+        console.error('Download failed with status:', response.statusCode);
+        return res.status(response.statusCode).json({ error: 'Failed to fetch file' });
+      }
+
+      const downloadFilename = filename || 'download';
+      res.setHeader('Content-Type', response.headers['content-type'] || 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadFilename)}"`);
+      if (response.headers['content-length']) {
+        res.setHeader('Content-Length', response.headers['content-length']);
+      }
+
+      response.pipe(res);
+    }).on('error', (error) => {
+      console.error('Download error:', error);
+      res.status(500).json({ error: 'Failed to download file' });
+    });
+  } catch (error) {
+    console.error('Download endpoint error:', error);
+    res.status(500).json({ error: 'Failed to process download request' });
+  }
+});
+
+// Get protocol file for download
+app.get('/api/protocols/:id/download', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const protocol = await Protocol.findById(id);
+
+    if (!protocol || !protocol.file || !protocol.file.url) {
+      return res.status(404).json({ error: 'Protocol file not found' });
+    }
+
+    // Redirect to the download endpoint with proper parameters
+    const downloadUrl = `/api/download?url=${encodeURIComponent(protocol.file.url)}&filename=${encodeURIComponent(protocol.file.originalname || 'protocol.pdf')}`;
+    res.redirect(downloadUrl);
+  } catch (error) {
+    console.error('Protocol download error:', error);
+    res.status(500).json({ error: 'Failed to download protocol file' });
+  }
+});
+
+// Get admin response file for download
+app.get('/api/submission/:id/download-response', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const submission = await Submission.findById(id);
+
+    if (!submission || !submission.adminResponseFile || !submission.adminResponseFile.url) {
+      return res.status(404).json({ error: 'Response file not found' });
+    }
+
+    const downloadUrl = `/api/download?url=${encodeURIComponent(submission.adminResponseFile.url)}&filename=${encodeURIComponent(submission.adminResponseFile.originalname || 'response.pdf')}`;
+    res.redirect(downloadUrl);
+  } catch (error) {
+    console.error('Response file download error:', error);
+    res.status(500).json({ error: 'Failed to download response file' });
   }
 });
 
