@@ -262,8 +262,8 @@ export default function ResidentCertificateLookup() {
               </svg>
             </div>
             <div>
-              <h3 style={styles.requirementsTitle}>דרישות להנפקת אישור תושב - אוטומטי</h3>
-              <p style={styles.requirementsSubtitle}>متطلبات إصدار شهادة السكن</p>
+              <h3 style={styles.requirementsTitle}>התנאים להפקה עצמית של אישור תושב</h3>
+              <p style={styles.requirementsSubtitle}>شروط الاستخراج الذاتي لشهادة السكن</p>
             </div>
           </div>
           <div style={styles.requirementsList}>
