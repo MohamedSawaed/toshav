@@ -32,6 +32,7 @@ const ResidentEligibilityChecker = () => {
       taxRefundLimit: 'בקשה להחזר מס ניתן להגיש רק עד 6 שנים אחורה',
       footerNote: 'מערכת זו מבוססת על הנחיות רשות המסים מתאריך 26 באוקטובר 2025.',
       footerContact: 'לשאלות נוספות ניתן לפנות למזכירות המועצה.',
+      disclaimer: 'הערה חשובה: מערכת זו הינה כלי עזר אוטומטי לבדיקה ראשונית בלבד ואינה מהווה חוות דעת משפטית או הבטחה לזכאות. התוצאות המוצגות הן להערכה כללית בלבד ועשויות להכיל טעויות. הקביעה הסופית נתונה לשיקול דעתה הבלעדי של הרשות המוסמכת. השימוש במערכת זו הינו על אחריות המשתמש בלבד, והוועדה המקומית אינה אחראית לכל נזק או הפסד הנובע מהסתמכות על תוצאות הבדיקה.',
       securityFarMsg: 'כאיש ביטחון המשרת בבסיס פתוח רחוק ממקום מגוריך, לא ניתן לקבל אישור תושב מהרשות המקומית.',
       canContactTax: 'ניתן לפנות ישירות למס הכנסה לבדיקת זכאות.',
       notEligibleGeneric: 'על פי הקריטריונים שהוזנו, לא ניתן לקבל אישור תושב מהרשות המקומית.',
@@ -133,6 +134,7 @@ const ResidentEligibilityChecker = () => {
       taxRefundLimit: 'يمكن تقديم طلب استرداد ضريبة حتى 6 سنوات للخلف فقط',
       footerNote: 'هذا النظام مبني على تعليمات سلطة الضرائب بتاريخ 26 أكتوبر 2025.',
       footerContact: 'لأسئلة إضافية يمكن التوجه لسكرتارية المجلس.',
+      disclaimer: 'ملاحظة هامة: هذا النظام هو أداة مساعدة أوتوماتيكية للفحص الأولي فقط ولا يشكل رأياً قانونياً أو ضماناً للأهلية. النتائج المعروضة هي للتقييم العام فقط وقد تحتوي على أخطاء. القرار النهائي يعود للسلطة المختصة حصرياً. استخدام هذا النظام يكون على مسؤولية المستخدم وحده، واللجنة المحلية غير مسؤولة عن أي ضرر أو خسارة ناتجة عن الاعتماد على نتائج الفحص.',
       securityFarMsg: 'كرجل أمن يخدم في قاعدة مفتوحة بعيدة عن مكان سكنك، لا يمكن الحصول على شهادة إقامة من السلطة المحلية.',
       canContactTax: 'يمكن التوجه مباشرة لضريبة الدخل لفحص الأهلية.',
       notEligibleGeneric: 'حسب المعايير المدخلة، لا يمكن الحصول على شهادة إقامة من السلطة المحلية.',
@@ -1158,6 +1160,28 @@ const ResidentEligibilityChecker = () => {
           border-color: #1a365d;
         }
 
+        .disclaimer-box {
+          background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+          border: 2px solid #d97706;
+          border-radius: 12px;
+          padding: 16px 20px;
+          margin-bottom: 24px;
+          text-align: center;
+        }
+
+        .disclaimer-icon {
+          font-size: 24px;
+          margin-bottom: 8px;
+        }
+
+        .disclaimer-text {
+          color: #92400e;
+          font-size: 12px;
+          line-height: 1.7;
+          margin: 0;
+          font-weight: 500;
+        }
+
         .footer-note {
           text-align: center;
           margin-top: 32px;
@@ -1223,6 +1247,11 @@ const ResidentEligibilityChecker = () => {
           <h1>{t.title}</h1>
           <p>{t.subtitle}</p>
         </header>
+
+        <div className="disclaimer-box">
+          <div className="disclaimer-icon">⚠️</div>
+          <p className="disclaimer-text">{t.disclaimer}</p>
+        </div>
 
         <div className="progress-container">
           <div className="progress-bar">
