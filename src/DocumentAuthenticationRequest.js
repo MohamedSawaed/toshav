@@ -1,5 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import { useState } from 'react';
 import API_URL from './config';
+import FileUploader from './components/FileUploader';
 
 const DocumentAuthenticationRequest = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -12,7 +13,6 @@ const DocumentAuthenticationRequest = () => {
     ownerEmail: '',
     notes: ''
   });
-  const [dragActive, setDragActive] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submissionId, setSubmissionId] = useState('');
@@ -23,31 +23,6 @@ const DocumentAuthenticationRequest = () => {
     { number: 3, titleAr: 'بيانات المالك', titleHe: 'פרטי בעלים' },
     { number: 4, titleAr: 'مراجعة وإرسال', titleHe: 'בדיקה ושליחה' }
   ];
-
-  const handleDrag = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
-    }
-  }, []);
-
-  const handleDrop = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFormData(prev => ({ ...prev, documentFile: e.dataTransfer.files[0] }));
-    }
-  }, []);
-
-  const handleFileInput = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData(prev => ({ ...prev, documentFile: e.target.files[0] }));
-    }
-  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -141,15 +116,6 @@ const DocumentAuthenticationRequest = () => {
 
         .step-item:hover {
           transform: translateY(-2px);
-        }
-
-        .upload-zone {
-          transition: all 0.3s ease;
-        }
-
-        .upload-zone:hover {
-          border-color: #1a365d !important;
-          background: #ebf8ff !important;
         }
 
         .doc-type-card {
@@ -292,57 +258,14 @@ const DocumentAuthenticationRequest = () => {
                     يرجى رفع نسخة واضحة من المستند المراد تصديقه (PDF, JPG, PNG)
                   </p>
 
-                  <div
-                    className="upload-zone"
-                    style={{
-                      ...styles.uploadZone,
-                      ...(dragActive ? styles.uploadZoneActive : {}),
-                      ...(formData.documentFile ? styles.uploadZoneSuccess : {})
-                    }}
-                    onDragEnter={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDragOver={handleDrag}
-                    onDrop={handleDrop}
-                    onClick={() => document.getElementById('fileInput').click()}
-                  >
-                    <input
-                      type="file"
-                      id="fileInput"
-                      style={{ display: 'none' }}
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={handleFileInput}
-                    />
-
-                    {formData.documentFile ? (
-                      <div style={styles.filePreview}>
-                        <div style={styles.fileIcon}>📄</div>
-                        <div style={styles.fileInfo}>
-                          <span style={styles.fileName}>{formData.documentFile.name}</span>
-                          <span style={styles.fileSize}>
-                            {(formData.documentFile.size / 1024 / 1024).toFixed(2)} MB
-                          </span>
-                        </div>
-                        <button
-                          style={styles.removeFileBtn}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setFormData(prev => ({ ...prev, documentFile: null }));
-                          }}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <div style={styles.uploadIconWrapper}>
-                          <span style={{ fontSize: '48px', animation: 'float 3s ease-in-out infinite' }}>📤</span>
-                        </div>
-                        <p style={styles.uploadText}>اسحب الملف هنا أو انقر للاختيار</p>
-                        <p style={styles.uploadTextHe}>גרור קובץ לכאן או לחץ לבחירה</p>
-                        <p style={styles.uploadHint}>الحد الأقصى: 10 MB | מקסימום: 10 MB</p>
-                      </>
-                    )}
-                  </div>
+                  <FileUploader
+                    onFilesSelected={(files) => setFormData(prev => ({ ...prev, documentFile: files[0] || null }))}
+                    maxFiles={1}
+                    maxSizeMB={10}
+                    acceptedTypes=".pdf,.jpg,.jpeg,.png"
+                    label="رفع المستند للمصادقة"
+                    labelHe="העלה מסמך לאימות"
+                  />
                 </div>
               )}
 
@@ -756,82 +679,6 @@ const styles = {
     color: '#718096',
     margin: '0 0 28px',
     lineHeight: 1.6,
-  },
-  uploadZone: {
-    border: '2px dashed #e2e8f0',
-    borderRadius: '16px',
-    padding: '48px 24px',
-    textAlign: 'center',
-    cursor: 'pointer',
-    background: '#f8fafc',
-  },
-  uploadZoneActive: {
-    borderColor: '#1a365d',
-    background: '#ebf8ff',
-  },
-  uploadZoneSuccess: {
-    borderColor: '#48bb78',
-    borderStyle: 'solid',
-    background: '#f0fff4',
-  },
-  uploadIconWrapper: {
-    marginBottom: '16px',
-  },
-  uploadText: {
-    fontSize: '16px',
-    color: '#1a365d',
-    fontWeight: '600',
-    margin: '0 0 4px',
-  },
-  uploadTextHe: {
-    fontSize: '14px',
-    color: '#718096',
-    margin: '0 0 8px',
-    fontFamily: "'Heebo', sans-serif",
-  },
-  uploadHint: {
-    fontSize: '13px',
-    color: '#a0aec0',
-    margin: 0,
-  },
-  filePreview: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    padding: '16px',
-    background: '#f0fff4',
-    borderRadius: '12px',
-    border: '2px solid #c6f6d5',
-  },
-  fileIcon: {
-    fontSize: '40px',
-  },
-  fileInfo: {
-    flex: 1,
-    textAlign: 'right',
-  },
-  fileName: {
-    display: 'block',
-    fontSize: '15px',
-    fontWeight: '600',
-    color: '#1a365d',
-    marginBottom: '4px',
-  },
-  fileSize: {
-    fontSize: '13px',
-    color: '#718096',
-  },
-  removeFileBtn: {
-    width: '32px',
-    height: '32px',
-    borderRadius: '50%',
-    border: 'none',
-    background: '#fed7d7',
-    color: '#c53030',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '700',
-    transition: 'all 0.2s ease',
   },
   docTypesGrid: {
     display: 'grid',

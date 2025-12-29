@@ -1,5 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import API_URL from './config';
+import FileUploader from './components/FileUploader';
 
 const OfficialDocumentRequest = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -13,7 +14,6 @@ const OfficialDocumentRequest = () => {
     subjectDescription: '',
     attachments: []
   });
-  const [dragActive, setDragActive] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submissionId, setSubmissionId] = useState('');
@@ -30,46 +30,6 @@ const OfficialDocumentRequest = () => {
     { number: 3, title: 'تفاصيل الطلب', titleHe: 'פרטי הבקשה', icon: '📝' },
     { number: 4, title: 'مراجعة وإرسال', titleHe: 'סקירה ושליחה', icon: '✓' }
   ];
-
-  const handleDrag = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
-    }
-  }, []);
-
-  const handleDrop = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const newFiles = Array.from(e.dataTransfer.files);
-      setFormData(prev => ({
-        ...prev,
-        attachments: [...prev.attachments, ...newFiles].slice(0, 5)
-      }));
-    }
-  }, []);
-
-  const handleFileInput = (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files);
-      setFormData(prev => ({
-        ...prev,
-        attachments: [...prev.attachments, ...newFiles].slice(0, 5)
-      }));
-    }
-  };
-
-  const removeFile = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      attachments: prev.attachments.filter((_, i) => i !== index)
-    }));
-  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -502,56 +462,14 @@ const OfficialDocumentRequest = () => {
                       <span style={styles.labelIcon}>📎</span>
                       مستندات داعمة (اختياري)
                     </label>
-                    <div
-                      className="upload-zone"
-                      style={{
-                        ...styles.uploadZone,
-                        ...(dragActive ? styles.uploadZoneActive : {})
-                      }}
-                      onDragEnter={handleDrag}
-                      onDragLeave={handleDrag}
-                      onDragOver={handleDrag}
-                      onDrop={handleDrop}
-                      onClick={() => document.getElementById('attachmentInput').click()}
-                    >
-                      <input
-                        type="file"
-                        id="attachmentInput"
-                        style={{ display: 'none' }}
-                        multiple
-                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                        onChange={handleFileInput}
-                      />
-                      <span style={styles.uploadIcon}>📤</span>
-                      <p style={styles.uploadText}>اسحب الملفات هنا أو انقر للاختيار</p>
-                      <p style={styles.uploadHint}>PDF, JPG, PNG, DOC (حتى 5 ملفات)</p>
-                    </div>
-
-                    {formData.attachments.length > 0 && (
-                      <div style={styles.filesList}>
-                        {formData.attachments.map((file, index) => (
-                          <div key={index} className="file-item" style={styles.fileItem}>
-                            <span style={styles.fileIcon}>📄</span>
-                            <div style={styles.fileInfo}>
-                              <span style={styles.fileName}>{file.name}</span>
-                              <span style={styles.fileSize}>
-                                {(file.size / 1024 / 1024).toFixed(2)} MB
-                              </span>
-                            </div>
-                            <button
-                              className="remove-btn"
-                              style={styles.removeBtn}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeFile(index);
-                              }}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <FileUploader
+                      onFilesSelected={(files) => setFormData(prev => ({ ...prev, attachments: files }))}
+                      maxFiles={5}
+                      maxSizeMB={10}
+                      acceptedTypes=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      label="إرفاق مستندات داعمة"
+                      labelHe="צרף מסמכים תומכים"
+                    />
                   </div>
                 </div>
               )}
