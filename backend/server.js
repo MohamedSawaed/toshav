@@ -988,6 +988,18 @@ app.get('/api/submission/:id/file/:fileIndex/download', async (req, res) => {
       return res.redirect(file.url);
     }
 
+    // Fallback: Build Cloudinary URL from filename (old format)
+    if (file.filename) {
+      // Determine resource type based on file extension
+      const ext = (file.originalname || file.filename).split('.').pop().toLowerCase();
+      const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+      const resourceType = imageExts.includes(ext) ? 'image' : 'raw';
+
+      const cloudinaryUrl = `https://res.cloudinary.com/ddc9a0scf/${resourceType}/upload/${file.filename}`;
+      console.log('Built Cloudinary URL from filename:', cloudinaryUrl);
+      return res.redirect(cloudinaryUrl);
+    }
+
     // Fallback: check for local file path (old files)
     if (file.path && fs.existsSync(file.path)) {
       console.log('Serving local file:', file.path);
@@ -1024,6 +1036,18 @@ app.get('/api/submission/:id/response/download', async (req, res) => {
     if (file.url) {
       console.log('Redirecting to Cloudinary URL:', file.url);
       return res.redirect(file.url);
+    }
+
+    // Fallback: Build Cloudinary URL from filename (old format)
+    if (file.filename) {
+      // Determine resource type based on file extension
+      const ext = (file.originalname || file.filename).split('.').pop().toLowerCase();
+      const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+      const resourceType = imageExts.includes(ext) ? 'image' : 'raw';
+
+      const cloudinaryUrl = `https://res.cloudinary.com/ddc9a0scf/${resourceType}/upload/${file.filename}`;
+      console.log('Built Cloudinary URL from filename:', cloudinaryUrl);
+      return res.redirect(cloudinaryUrl);
     }
 
     // Fallback: check for local file path (old files)
