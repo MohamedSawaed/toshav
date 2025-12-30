@@ -36,9 +36,15 @@ const ResidentEligibilityChecker = () => {
       securityFarMsg: 'כאיש ביטחון המשרת בבסיס פתוח רחוק ממקום מגוריך, לא ניתן לקבל אישור תושב מהרשות המקומית.',
       canContactTax: 'ניתן לפנות ישירות למס הכנסה לבדיקת זכאות.',
       notEligibleGeneric: 'על פי הקריטריונים שהוזנו, לא ניתן לקבל אישור תושב מהרשות המקומית.',
+      emailContact: 'פנייה במייל:',
+      currentYearNote: 'לשנה השוטפת:',
+      previousYearsNote: 'לשנים קודמות:',
+      submitWithTaxReturn: 'יש להגיש במסגרת הגשת בקשה להחזר מס',
+      submitWithAnnualReport: 'יש להגיש במסגרת הגשת דוח שנתי בצירוף הוכחות למרכז חיים',
+      taxEmail: 'ornara@taxes.gov.il',
       descriptions: {
-        employeeHaifaSouth: 'כשכיר העובד בחיפה ודרומה, עליך למלא טופס בקשה לקבלת אישור תושב.',
-        selfEmployedHome: 'כעצמאי העובד מהבית ללא עסק פיזי, עליך להגיש את בקשתך במסגרת הגשת דוח שנתי למס הכנסה.',
+        employeeHaifaSouth: 'כשכיר העובד בחיפה ודרומה ללא אישור נסיעות מחוסנייה, יש לפנות ישירות למס הכנסה במייל.',
+        selfEmployedHome: 'כעצמאי העובד מהבית ולא ממשרד או חנות, עליך להגיש את בקשתך במסגרת הגשת דוח שנתי למס הכנסה בצירוף הוכחות למרכז חיים.',
         employeePreviousYears: 'להחזר מס עבור שנים קודמות, יש להגיש בקשה במסגרת הגשת בקשה להחזר מס.'
       },
       questions: {
@@ -138,9 +144,15 @@ const ResidentEligibilityChecker = () => {
       securityFarMsg: 'كرجل أمن يخدم في قاعدة مفتوحة بعيدة عن مكان سكنك، لا يمكن الحصول على شهادة إقامة من السلطة المحلية.',
       canContactTax: 'يمكن التوجه مباشرة لضريبة الدخل لفحص الأهلية.',
       notEligibleGeneric: 'حسب المعايير المدخلة، لا يمكن الحصول على شهادة إقامة من السلطة المحلية.',
+      emailContact: 'التواصل عبر البريد:',
+      currentYearNote: 'للسنة الحالية:',
+      previousYearsNote: 'للسنوات السابقة:',
+      submitWithTaxReturn: 'يجب تقديمه ضمن طلب استرداد الضريبة',
+      submitWithAnnualReport: 'يجب تقديمه ضمن التقرير السنوي مع إثباتات مركز الحياة',
+      taxEmail: 'ornara@taxes.gov.il',
       descriptions: {
-        employeeHaifaSouth: 'كأجير يعمل في حيفا وجنوباً، عليك تعبئة نموذج طلب للحصول على شهادة إقامة.',
-        selfEmployedHome: 'كمستقل يعمل من البيت بدون عمل فعلي، عليك تقديم طلبك ضمن تقديم التقرير السنوي لضريبة الدخل.'
+        employeeHaifaSouth: 'كأجير يعمل في حيفا وجنوباً بدون تصديق مواصلات من الحسينية، يجب التوجه مباشرة لضريبة الدخل عبر البريد الإلكتروني.',
+        selfEmployedHome: 'كمستقل يعمل من البيت وليس من مكتب أو محل، عليك تقديم طلبك ضمن التقرير السنوي لضريبة الدخل مع إثباتات مركز الحياة.'
       },
       questions: {
         isResident: 'هل أنت مسجل في سجل السكان في الحسينية؟',
@@ -429,6 +441,7 @@ const ResidentEligibilityChecker = () => {
         eligible: false,
         eligibilityPath,
         referToTaxAuthority: true,
+        email: 'ornara@taxes.gov.il',
         appendix: language === 'he' ? 'א' : 'أ',
         requirements: [
           t.requirements.declaration,
@@ -511,6 +524,7 @@ const ResidentEligibilityChecker = () => {
         eligible: false,
         eligibilityPath,
         referToTaxAuthority: true,
+        email: 'ornara@taxes.gov.il',
         appendix: language === 'he' ? 'א' : 'أ',
         requirements: [
           t.requirements.declaration,
@@ -563,19 +577,13 @@ const ResidentEligibilityChecker = () => {
           <h2>{t.referToTax}</h2>
           <p>{t.descriptions[result.eligibilityPath]}</p>
           
-          {result.eligibilityPath === 'employeeHaifaSouth' && (
-            <div className="form-link-box">
-              <span className="form-label">{t.fillForm}</span>
-              <a href="https://mas.misgav.org.il" target="_blank" rel="noopener noreferrer" className="form-link">mas.misgav.org.il</a>
-            </div>
-          )}
-          
-          {result.email && result.eligibilityPath !== 'employeeHaifaSouth' && (
+          {result.email && (
             <div className="email-box">
-              <span className="email-label">{language === 'he' ? 'פנייה במייל:' : 'التواصل عبر البريد:'}</span>
+              <span className="email-label">{t.emailContact || (language === 'he' ? 'פנייה במייל:' : 'التواصل عبر البريد:')}}</span>
               <a href={`mailto:${result.email}`} className="email-link">{result.email}</a>
             </div>
           )}
+
 
           <div className="referral-info">
             <h3>{t.docsToAttach} {result.appendix}:</h3>
