@@ -428,6 +428,11 @@ function App() {
   );
 
   const navigateTo = (view) => {
+    // Redirect to WhatsApp for certificate conditions
+    if (view === 'certificate') {
+      window.open('https://api.whatsapp.com/send/?phone=97243760274&text&type=phone_number&app_absent=0', '_blank');
+      return;
+    }
     setCurrentView(view);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
