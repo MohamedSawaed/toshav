@@ -51,64 +51,92 @@ function App() {
     return () => window.removeEventListener('keypress', handleKeyPress);
   }, [secretCode]);
 
-  const services = [
+  // Service categories with organized services
+  const serviceCategories = [
     {
-      id: 'eligibility',
-      icon: '✓',
-      titleHe: 'בדיקת זכאות',
-      titleAr: 'فحص الاستحقاق',
-      descHe: 'בדוק זכאות לאישור תושב',
-      descAr: 'تحقق من أهليتك للحصول على شهادة السكن'
+      id: 'resident',
+      titleHe: 'שירותי תושב',
+      titleAr: 'خدمات السكان',
+      icon: '👤',
+      services: [
+        {
+          id: 'eligibility',
+          icon: '✓',
+          titleHe: 'בדיקת זכאות',
+          titleAr: 'فحص الاستحقاق',
+          descHe: 'בדוק זכאות לאישור תושב',
+          descAr: 'تحقق من أهليتك للحصول على شهادة السكن'
+        },
+        {
+          id: 'certificate',
+          icon: '📄',
+          titleHe: 'תנאים להפקה עצמית של אישור תושב',
+          titleAr: 'شروط الاستخراج الذاتي لشهادة السكن',
+          descHe: 'מידע על תנאי הזכאות',
+          descAr: 'معلومات عن شروط الأهلية'
+        },
+        {
+          id: 'tracker',
+          icon: '🔍',
+          titleHe: 'מעקב בקשות',
+          titleAr: 'تتبع الطلبات',
+          descHe: 'מעקב אחר סטטוס הבקשה',
+          descAr: 'تتبع حالة طلبك'
+        }
+      ]
     },
     {
-      id: 'certificate',
-      icon: '📄',
-      titleHe: 'תנאים להפקה עצמית של אישור תושב',
-      titleAr: 'شروط الاستخراج الذاتي لشهادة السكن',
-      descHe: '',
-      descAr: ''
-    },
-    {
-      id: 'documentAuth',
-      icon: '✔',
-      titleHe: 'אימות מסמכים',
-      titleAr: 'مصادقة المستندات',
-      descHe: 'אימות רשמי של מסמכים',
-      descAr: 'طلب مصادقة رسمية على المستندات'
-    },
-    {
-      id: 'tenders',
+      id: 'documents',
+      titleHe: 'מסמכים ואישורים',
+      titleAr: 'المستندات والتصديقات',
       icon: '📋',
-      titleHe: 'מכרזים',
-      titleAr: 'المناقصات',
-      descHe: 'צפייה במכרזים פעילים',
-      descAr: 'عرض المناقصات النشطة'
+      services: [
+        {
+          id: 'documentAuth',
+          icon: '✔',
+          titleHe: 'אימות מסמכים',
+          titleAr: 'مصادقة المستندات',
+          descHe: 'אימות רשמי של מסמכים',
+          descAr: 'طلب مصادقة رسمية على المستندات'
+        },
+        {
+          id: 'officialDoc',
+          icon: '📝',
+          titleHe: 'מסמך רשמי',
+          titleAr: 'مستند رسمي',
+          descHe: 'בקשה להכנת מסמך',
+          descAr: 'طلب إعداد مستند رسمي'
+        }
+      ]
     },
     {
-      id: 'officialDoc',
-      icon: '📝',
-      titleHe: 'מסמך רשמי',
-      titleAr: 'مستند رسمي',
-      descHe: 'בקשה להכנת מסמך',
-      descAr: 'طلب إعداد مستند رسمي'
-    },
-    {
-      id: 'tracker',
-      icon: '🔍',
-      titleHe: 'מעקב בקשות',
-      titleAr: 'تتبع الطلبات',
-      descHe: 'מעקב אחר סטטוס הבקשה',
-      descAr: 'تتبع حالة طلبك'
-    },
-    {
-      id: 'protocols',
-      icon: '📑',
-      titleHe: 'פרוטוקולים',
-      titleAr: 'بروتوكولات الجلسات',
-      descHe: 'צפייה בפרוטוקולי ישיבות',
-      descAr: 'عرض بروتوكولات جلسات اللجنة'
+      id: 'council',
+      titleHe: 'מידע ציבורי',
+      titleAr: 'المعلومات العامة',
+      icon: '��️',
+      services: [
+        {
+          id: 'tenders',
+          icon: '📋',
+          titleHe: 'מכרזים',
+          titleAr: 'المناقصات',
+          descHe: 'צפייה במכרזים פעילים',
+          descAr: 'عرض المناقصات النشطة'
+        },
+        {
+          id: 'protocols',
+          icon: '📑',
+          titleHe: 'פרוטוקולים',
+          titleAr: 'بروتوكولات الجلسات',
+          descHe: 'צפייה בפרוטוקולי ישיבות',
+          descAr: 'عرض بروتوكولات جلسات اللجنة'
+        }
+      ]
     }
   ];
+
+  // Flatten services for backward compatibility
+  const services = serviceCategories.flatMap(cat => cat.services);
 
   const styles = {
     container: {
@@ -793,43 +821,72 @@ function App() {
             </p>
           </div>
 
-          {/* Services Grid */}
-          <div style={styles.servicesGrid}>
-            {services.map((service) => (
-              <div
-                key={service.id}
-                style={styles.serviceCard}
-                onClick={() => navigateTo(service.id)}
-                onMouseEnter={(e) => {
-                  Object.assign(e.currentTarget.style, styles.serviceCardHover);
-                  e.currentTarget.querySelector('.arrow').style.color = '#2b6cb0';
-                  e.currentTarget.querySelector('.arrow').style.transform = 'translateY(-50%) translateX(-4px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#e2e8f0';
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.querySelector('.arrow').style.color = '#a0aec0';
-                  e.currentTarget.querySelector('.arrow').style.transform = 'translateY(-50%)';
-                }}
-              >
-                <div style={styles.serviceCardTop} />
-                <div style={styles.serviceHeader}>
-                  <div style={styles.serviceIcon}>{service.icon}</div>
-                  <div style={styles.serviceTitles}>
-                    <h3 style={styles.serviceTitleHe}>{service.titleHe}</h3>
-                    <p style={styles.serviceTitleAr}>{service.titleAr}</p>
-                  </div>
+{/* Services by Category */}
+          {serviceCategories.map((category) => (
+            <div key={category.id} style={{ marginBottom: '32px' }}>
+              {/* Category Header */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '16px',
+                paddingBottom: '12px',
+                borderBottom: '2px solid #e2e8f0'
+              }}>
+                <span style={{ fontSize: '24px' }}>{category.icon}</span>
+                <div>
+                  <h2 style={{
+                    margin: 0,
+                    fontSize: '1.1rem',
+                    fontWeight: '700',
+                    color: '#1a365d'
+                  }}>{category.titleAr}</h2>
+                  <span style={{
+                    fontSize: '0.85rem',
+                    color: '#718096'
+                  }}>{category.titleHe}</span>
                 </div>
-                <p style={styles.serviceDesc}>
-                  {service.descAr}
-                  <br />
-                  <span style={{ color: '#a0aec0' }}>{service.descHe}</span>
-                </p>
-                <span className="arrow" style={styles.serviceArrow}>←</span>
               </div>
-            ))}
-          </div>
+
+              {/* Category Services Grid */}
+              <div style={styles.servicesGrid}>
+                {category.services.map((service) => (
+                  <div
+                    key={service.id}
+                    style={styles.serviceCard}
+                    onClick={() => navigateTo(service.id)}
+                    onMouseEnter={(e) => {
+                      Object.assign(e.currentTarget.style, styles.serviceCardHover);
+                      e.currentTarget.querySelector('.arrow').style.color = '#2b6cb0';
+                      e.currentTarget.querySelector('.arrow').style.transform = 'translateY(-50%) translateX(-4px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#e2e8f0';
+                      e.currentTarget.style.boxShadow = 'none';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.querySelector('.arrow').style.color = '#a0aec0';
+                      e.currentTarget.querySelector('.arrow').style.transform = 'translateY(-50%)';
+                    }}
+                  >
+                    <div style={styles.serviceCardTop} />
+                    <div style={styles.serviceHeader}>
+                      <div style={styles.serviceIcon}>{service.icon}</div>
+                      <div style={styles.serviceTitles}>
+                        <h3 style={styles.serviceTitleHe}>{service.titleHe}</h3>
+                        <p style={styles.serviceTitleAr}>{service.titleAr}</p>
+                      </div>
+                    </div>
+                    <p style={styles.serviceDesc}>
+                      {service.descAr}
+                      <br />
+                      <span style={{ color: '#a0aec0' }}>{service.descHe}</span>
+                    </p>
+                    <span className="arrow" style={styles.serviceArrow}>←</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </main>
 
         {/* Footer */}
