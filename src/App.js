@@ -74,14 +74,6 @@ function App() {
           titleAr: 'استخراج ذاتي لشهادة السكن',
           descHe: '',
           descAr: ''
-        },
-        {
-          id: 'tracker',
-          icon: '🔍',
-          titleHe: 'מעקב בקשות',
-          titleAr: 'تتبع الطلبات',
-          descHe: 'מעקב אחר סטטוס הבקשה',
-          descAr: 'تتبع حالة طلبك'
         }
       ]
     },
@@ -106,6 +98,14 @@ function App() {
           titleAr: 'مستند رسمي',
           descHe: 'בקשה להכנת מסמך',
           descAr: 'طلب إعداد مستند رسمي'
+        },
+        {
+          id: 'tracker',
+          icon: '🔍',
+          titleHe: 'מעקב בקשות',
+          titleAr: 'تتبع الطلبات',
+          descHe: 'מעקב אחר סטטוס הבקשה',
+          descAr: 'تتبع حالة طلبك'
         }
       ]
     },
