@@ -103,6 +103,112 @@ const MeetingProtocols = () => {
           background: rgba(255, 255, 255, 0.15) !important;
           transform: rotate(90deg);
         }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+          .protocols-table {
+            display: none !important;
+          }
+          .mobile-cards {
+            display: flex !important;
+          }
+        }
+
+        @media (min-width: 769px) {
+          .mobile-cards {
+            display: none !important;
+          }
+        }
+
+        .protocol-mobile-card {
+          background: #fff;
+          border-radius: 12px;
+          border: 2px solid #e2e8f0;
+          padding: 16px;
+          margin-bottom: 12px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .protocol-mobile-card:active {
+          transform: scale(0.98);
+        }
+
+        .mobile-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid #e2e8f0;
+        }
+
+        .mobile-card-number {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .mobile-card-badge {
+          background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+          color: #fff;
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 14px;
+          font-weight: 700;
+        }
+
+        .mobile-card-date {
+          font-size: 12px;
+          color: #64748b;
+          text-align: left;
+        }
+
+        .mobile-card-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: #1e293b;
+          margin-bottom: 4px;
+          line-height: 1.4;
+        }
+
+        .mobile-card-title-he {
+          font-size: 13px;
+          color: #64748b;
+          margin-bottom: 12px;
+        }
+
+        .mobile-card-actions {
+          display: flex;
+          gap: 10px;
+          margin-top: 12px;
+        }
+
+        .mobile-download-btn {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 12px 16px;
+          background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+          color: #fff;
+          border: none;
+          border-radius: 10px;
+          font-size: 14px;
+          font-weight: 600;
+          font-family: '"Tajawal", sans-serif';
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(26, 54, 93, 0.25);
+        }
+
+        .mobile-details-btn {
+          padding: 12px 16px;
+          background: #f1f5f9;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          font-size: 16px;
+          cursor: pointer;
+        }
       `}</style>
 
       <div style={styles.wrapper}>
@@ -152,73 +258,122 @@ const MeetingProtocols = () => {
             <p style={styles.emptyText}>سيتم نشر البروتوكولات الجديدة هنا | פרוטוקולים חדשים יפורסמו כאן</p>
           </div>
         ) : (
-          <div style={styles.tableContainer}>
-            <table style={styles.table}>
-              <thead>
-                <tr style={styles.tableHeader}>
-                  <th style={styles.th}>#</th>
-                  <th style={styles.th}>رقم الجلسة<br/><span style={styles.thHe}>מס' ישיבה</span></th>
-                  <th style={styles.th}>التاريخ<br/><span style={styles.thHe}>תאריך</span></th>
-                  <th style={styles.thTitle}>العنوان<br/><span style={styles.thHe}>כותרת</span></th>
-                  <th style={styles.th}>تحميل<br/><span style={styles.thHe}>הורדה</span></th>
-                  <th style={styles.th}>تفاصيل<br/><span style={styles.thHe}>פרטים</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                {protocols.map((protocol, index) => (
-                  <tr key={protocol.id || protocol._id} style={styles.tableRow}>
-                    <td style={styles.td}>
-                      <span style={styles.rowNumber}>{index + 1}</span>
-                    </td>
-                    <td style={styles.td}>
-                      <span style={styles.meetingNum}>{protocol.meetingNumber || '-'}</span>
-                    </td>
-                    <td style={styles.td}>
-                      <div style={styles.dateCell}>
-                        <span style={styles.dateAr}>{formatDate(protocol.meetingDate)}</span>
-                        <span style={styles.dateHe}>{formatDateHe(protocol.meetingDate)}</span>
-                      </div>
-                    </td>
-                    <td style={styles.tdTitle}>
-                      <div style={styles.titleCell}>
-                        <span style={styles.titleAr}>{protocol.title}</span>
-                        {protocol.titleHe && (
-                          <span style={styles.titleHe}>{protocol.titleHe}</span>
-                        )}
-                        {protocol.description && (
-                          <span style={styles.descText}>{protocol.description}</span>
-                        )}
-                      </div>
-                    </td>
-                    <td style={styles.td}>
-                      {protocol.file && protocol.file.url ? (
-                        <button
-                          onClick={() => handleDownload(protocol)}
-                          disabled={downloading === (protocol.id || protocol._id)}
-                          style={{
-                            ...styles.downloadBtn,
-                            opacity: downloading === (protocol.id || protocol._id) ? 0.6 : 1
-                          }}
-                        >
-                          {downloading === (protocol.id || protocol._id) ? '...' : '📥 تحميل'}
-                        </button>
-                      ) : (
-                        <span style={styles.noFile}>-</span>
-                      )}
-                    </td>
-                    <td style={styles.td}>
-                      <button
-                        onClick={() => setSelectedProtocol(protocol)}
-                        style={styles.detailsBtn}
-                      >
-                        👁️
-                      </button>
-                    </td>
+          <>
+            {/* Desktop Table View */}
+            <div className="protocols-table" style={styles.tableContainer}>
+              <table style={styles.table}>
+                <thead>
+                  <tr style={styles.tableHeader}>
+                    <th style={styles.th}>#</th>
+                    <th style={styles.th}>رقم الجلسة<br/><span style={styles.thHe}>מס' ישיבה</span></th>
+                    <th style={styles.th}>التاريخ<br/><span style={styles.thHe}>תאריך</span></th>
+                    <th style={styles.thTitle}>العنوان<br/><span style={styles.thHe}>כותרת</span></th>
+                    <th style={styles.th}>تحميل<br/><span style={styles.thHe}>הורדה</span></th>
+                    <th style={styles.th}>تفاصيل<br/><span style={styles.thHe}>פרטים</span></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {protocols.map((protocol, index) => (
+                    <tr key={protocol.id || protocol._id} style={styles.tableRow}>
+                      <td style={styles.td}>
+                        <span style={styles.rowNumber}>{index + 1}</span>
+                      </td>
+                      <td style={styles.td}>
+                        <span style={styles.meetingNum}>{protocol.meetingNumber || '-'}</span>
+                      </td>
+                      <td style={styles.td}>
+                        <div style={styles.dateCell}>
+                          <span style={styles.dateAr}>{formatDate(protocol.meetingDate)}</span>
+                          <span style={styles.dateHe}>{formatDateHe(protocol.meetingDate)}</span>
+                        </div>
+                      </td>
+                      <td style={styles.tdTitle}>
+                        <div style={styles.titleCell}>
+                          <span style={styles.titleAr}>{protocol.title}</span>
+                          {protocol.titleHe && (
+                            <span style={styles.titleHe}>{protocol.titleHe}</span>
+                          )}
+                          {protocol.description && (
+                            <span style={styles.descText}>{protocol.description}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td style={styles.td}>
+                        {protocol.file && protocol.file.url ? (
+                          <button
+                            onClick={() => handleDownload(protocol)}
+                            disabled={downloading === (protocol.id || protocol._id)}
+                            style={{
+                              ...styles.downloadBtn,
+                              opacity: downloading === (protocol.id || protocol._id) ? 0.6 : 1
+                            }}
+                          >
+                            {downloading === (protocol.id || protocol._id) ? '...' : '📥 تحميل'}
+                          </button>
+                        ) : (
+                          <span style={styles.noFile}>-</span>
+                        )}
+                      </td>
+                      <td style={styles.td}>
+                        <button
+                          onClick={() => setSelectedProtocol(protocol)}
+                          style={styles.detailsBtn}
+                        >
+                          👁️
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="mobile-cards" style={{ display: 'none', flexDirection: 'column' }}>
+              {protocols.map((protocol, index) => (
+                <div key={protocol.id || protocol._id} className="protocol-mobile-card">
+                  <div className="mobile-card-header">
+                    <div className="mobile-card-number">
+                      <span style={styles.rowNumber}>{index + 1}</span>
+                      <span className="mobile-card-badge">جلسة {protocol.meetingNumber || '-'}</span>
+                    </div>
+                    <div className="mobile-card-date">
+                      <div>{formatDate(protocol.meetingDate)}</div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>{formatDateHe(protocol.meetingDate)}</div>
+                    </div>
+                  </div>
+
+                  <div className="mobile-card-title">{protocol.title}</div>
+                  {protocol.titleHe && (
+                    <div className="mobile-card-title-he">{protocol.titleHe}</div>
+                  )}
+
+                  <div className="mobile-card-actions">
+                    {protocol.file && protocol.file.url ? (
+                      <button
+                        className="mobile-download-btn"
+                        onClick={() => handleDownload(protocol)}
+                        disabled={downloading === (protocol.id || protocol._id)}
+                        style={{ opacity: downloading === (protocol.id || protocol._id) ? 0.6 : 1 }}
+                      >
+                        📥 {downloading === (protocol.id || protocol._id) ? 'جاري...' : 'تحميل | הורדה'}
+                      </button>
+                    ) : (
+                      <button className="mobile-download-btn" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+                        لا يوجد ملف
+                      </button>
+                    )}
+                    <button
+                      className="mobile-details-btn"
+                      onClick={() => setSelectedProtocol(protocol)}
+                    >
+                      👁️
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         {/* Footer */}
