@@ -990,14 +990,23 @@ app.get('/api/submission/:id/file/:fileIndex/download', async (req, res) => {
 
     // Fallback: Build Cloudinary URL from filename (old format)
     if (file.filename) {
-      // Determine resource type based on file extension
-      const ext = (file.originalname || file.filename).split('.').pop().toLowerCase();
-      const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
-      const resourceType = imageExts.includes(ext) ? 'image' : 'raw';
+      // Check if filename includes folder path (new format)
+      if (file.filename.includes('/')) {
+        const ext = (file.originalname || file.filename).split('.').pop().toLowerCase();
+        const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+        const resourceType = imageExts.includes(ext) ? 'image' : 'raw';
+        const cloudinaryUrl = `https://res.cloudinary.com/ddc9a0scf/${resourceType}/upload/${file.filename}`;
+        console.log('Built Cloudinary URL from filename:', cloudinaryUrl);
+        return res.redirect(cloudinaryUrl);
+      }
 
-      const cloudinaryUrl = `https://res.cloudinary.com/ddc9a0scf/${resourceType}/upload/${file.filename}`;
-      console.log('Built Cloudinary URL from filename:', cloudinaryUrl);
-      return res.redirect(cloudinaryUrl);
+      // Old format without folder - file was uploaded locally before Cloudinary
+      console.log('Old local file format detected:', file.filename);
+      return res.status(404).json({
+        error: 'الملف غير متوفر | הקובץ אינו זמין',
+        details: 'هذا الملف قديم ولم يعد متوفراً. | קובץ זה ישן ואינו זמין יותר.',
+        needsReupload: true
+      });
     }
 
     // Fallback: check for local file path (old files)
@@ -1009,8 +1018,9 @@ app.get('/api/submission/:id/file/:fileIndex/download', async (req, res) => {
     // No valid file source found
     console.log('No valid file URL or path found');
     return res.status(404).json({
-      error: 'File not available',
-      details: 'This file may have been uploaded before cloud storage was configured. Please contact admin.'
+      error: 'الملف غير متوفر | הקובץ אינו זמין',
+      details: 'هذا الملف قديم ولم يعد متوفراً. | קובץ זה ישן ואינו זמין יותר.',
+      needsReupload: true
     });
   } catch (error) {
     console.error('Submission file download error:', error);
@@ -1040,14 +1050,23 @@ app.get('/api/submission/:id/response/download', async (req, res) => {
 
     // Fallback: Build Cloudinary URL from filename (old format)
     if (file.filename) {
-      // Determine resource type based on file extension
-      const ext = (file.originalname || file.filename).split('.').pop().toLowerCase();
-      const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
-      const resourceType = imageExts.includes(ext) ? 'image' : 'raw';
+      // Check if filename includes folder path (new format)
+      if (file.filename.includes('/')) {
+        const ext = (file.originalname || file.filename).split('.').pop().toLowerCase();
+        const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+        const resourceType = imageExts.includes(ext) ? 'image' : 'raw';
+        const cloudinaryUrl = `https://res.cloudinary.com/ddc9a0scf/${resourceType}/upload/${file.filename}`;
+        console.log('Built Cloudinary URL from filename:', cloudinaryUrl);
+        return res.redirect(cloudinaryUrl);
+      }
 
-      const cloudinaryUrl = `https://res.cloudinary.com/ddc9a0scf/${resourceType}/upload/${file.filename}`;
-      console.log('Built Cloudinary URL from filename:', cloudinaryUrl);
-      return res.redirect(cloudinaryUrl);
+      // Old format without folder - file was uploaded locally before Cloudinary
+      console.log('Old local file format detected:', file.filename);
+      return res.status(404).json({
+        error: 'الملف غير متوفر | הקובץ אינו זמין',
+        details: 'هذا الملف قديم ولم يعد متوفراً. يرجى إعادة رفعه من لوحة الإدارة. | קובץ זה ישן ואינו זמין יותר. יש להעלותו מחדש מלוח הניהול.',
+        needsReupload: true
+      });
     }
 
     // Fallback: check for local file path (old files)
@@ -1059,8 +1078,9 @@ app.get('/api/submission/:id/response/download', async (req, res) => {
     // No valid file source found
     console.log('No valid file URL or path found');
     return res.status(404).json({
-      error: 'Response file not available',
-      details: 'This file may have been uploaded before cloud storage was configured. Please re-upload the response file.'
+      error: 'الملف غير متوفر | הקובץ אינו זמין',
+      details: 'هذا الملف قديم ولم يعد متوفراً. يرجى إعادة رفعه من لوحة الإدارة. | קובץ זה ישן ואינו זמין יותר. יש להעלותו מחדש מלוח הניהול.',
+      needsReupload: true
     });
   } catch (error) {
     console.error('Response file download error:', error);
