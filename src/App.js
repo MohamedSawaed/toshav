@@ -60,6 +60,14 @@ function App() {
       icon: '👤',
       services: [
         {
+          id: 'residentRequest',
+          icon: '📝',
+          titleHe: 'בקשה לאישור תושבות לשם קבלת הנחת תושב',
+          titleAr: 'طلب شهادة إقامة للحصول على خصم المقيم',
+          descHe: '',
+          descAr: ''
+        },
+        {
           id: 'eligibility',
           icon: '📋',
           titleHe: 'בדיקת מסמכים נדרשים לבקשת אישור תושב',
@@ -459,6 +467,11 @@ function App() {
     // Redirect to WhatsApp for certificate conditions
     if (view === 'certificate') {
       window.open('https://api.whatsapp.com/send/?phone=97243760274&text&type=phone_number&app_absent=0', '_blank');
+      return;
+    }
+    // Redirect to external site for resident request
+    if (view === 'residentRequest') {
+      window.open('https://mas.misgav.org.il/', '_blank');
       return;
     }
     setCurrentView(view);
