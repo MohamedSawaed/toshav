@@ -62,7 +62,7 @@ function App() {
         {
           id: 'eligibility',
           icon: '📋',
-          titleHe: 'בדיקת מסמכים נדרשים',
+          titleHe: 'בדיקת מסמכים נדרשים לבקשת אישור תושב',
           titleAr: 'فحص المستندات المطلوبة',
           descHe: 'בדוק אילו מסמכים להגיש לפי מצבך',
           descAr: 'تحقق من المستندات المطلوبة حسب حالتك'
