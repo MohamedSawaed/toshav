@@ -532,7 +532,7 @@ const AdminDashboard = () => {
     const pageNames = {
       'home': 'الصفحة الرئيسية',
       'eligibility': 'فحص الاستحقاق',
-      'certificate': 'شهادة السكن',
+      'certificate': 'شهادة الإقامة',
       'documentAuth': 'مصادقة المستندات',
       'tenders': 'المناقصات',
       'officialDoc': 'طلب مستند رسمي',
