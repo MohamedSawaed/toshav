@@ -386,7 +386,7 @@ export default function ResidentCertificateLookup() {
                   <div style={styles.resultInfo}>
                     <div style={styles.resultBadge}>נמצא</div>
                     <div>
-                      <h3 style={styles.resultTitle}>אישור התגוררות</h3>
+                      <h3 style={styles.resultTitle}>אישור תושבות</h3>
                       <p style={styles.resultMeta}>ת.ז {idNumber} • עמוד {pageNumber}</p>
                     </div>
                   </div>
@@ -413,7 +413,7 @@ export default function ResidentCertificateLookup() {
                   <iframe
                     src={pdfUrl}
                     style={styles.iframe}
-                    title="אישור התגוררות"
+                    title="אישור תושבות"
                   />
                 </div>
               </div>
@@ -432,7 +432,7 @@ export default function ResidentCertificateLookup() {
                     </svg>
                   </div>
                 </div>
-                <h3 style={styles.emptyTitle}>חיפוש אישור התגוררות</h3>
+                <h3 style={styles.emptyTitle}>חיפוש אישור תושבות</h3>
                 <p style={styles.emptyText}>הזן את מספר תעודת הזהות שלך לקבלת האישור</p>
               </div>
             )}
