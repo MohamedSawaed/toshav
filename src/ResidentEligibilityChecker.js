@@ -4,13 +4,12 @@ const ResidentEligibilityChecker = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
-  const [showRequirements, setShowRequirements] = useState(false);
   const [language, setLanguage] = useState('he'); // 'he' or 'ar'
 
   const translations = {
     he: {
-      title: 'בדיקת זכאות לאישור תושב',
-      subtitle: 'מערכת לבדיקת זכאות לאישור תושב ביישוב מזכה עבור רווקים',
+      title: 'בדיקת מסמכים נדרשים',
+      subtitle: 'בדוק אילו מסמכים עליך להגיש לפי מצבך האישי',
       council: 'מועצת משגב - חוסנייה',
       step: 'שלב',
       question: 'שאלה',
@@ -18,35 +17,19 @@ const ResidentEligibilityChecker = () => {
       completed: 'הושלם',
       startOver: 'התחל מחדש',
       newCheck: 'בדיקה חדשה',
-      showDocs: 'הצג מסמכים נדרשים',
-      hideDocs: 'הסתר מסמכים נדרשים',
-      docsForSecretary: 'מסמכים להגשה למזכירות:',
-      cannotContinue: 'לא ניתן להמשיך',
-      referToTax: 'יש לפנות למס הכנסה',
-      notEligible: 'לא זכאי לאישור מהרשות המקומית',
-      eligible: 'את/ה זכאי/ת לאישור תושב!',
-      canGetFromCouncil: 'ניתן לקבל אישור תושב מהרשות המקומית (מועצת משגב)',
+      requiredDocs: 'המסמכים הנדרשים להגשה:',
+      submitTo: 'יש להגיש את המסמכים ל:',
+      localAuthority: 'הרשות המקומית (מועצת משגב)',
+      taxAuthority: 'רשות המסים',
       fillForm: 'מילוי טופס בקשה:',
-      docsToAttach: 'מסמכים לצירוף לפי נספח',
       important: 'חשוב:',
       taxRefundLimit: 'בקשה להחזר מס ניתן להגיש רק עד 6 שנים אחורה',
       footerNote: 'מערכת זו מבוססת על הנחיות רשות המסים מתאריך 26 באוקטובר 2025.',
       footerContact: 'לשאלות נוספות ניתן לפנות למזכירות המועצה.',
-      disclaimer: 'הערה חשובה: מערכת זו הינה כלי עזר אוטומטי לבדיקה ראשונית בלבד ואינה מהווה חוות דעת משפטית או הבטחה לזכאות. התוצאות המוצגות הן להערכה כללית בלבד ועשויות להכיל טעויות. הקביעה הסופית נתונה לשיקול דעתה הבלעדי של הרשות המוסמכת. השימוש במערכת זו הינו על אחריות המשתמש בלבד, והוועדה המקומית אינה אחראית לכל נזק או הפסד הנובע מהסתמכות על תוצאות הבדיקה.',
-      securityFarMsg: 'כאיש ביטחון המשרת בבסיס פתוח רחוק ממקום מגוריך, לא ניתן לקבל אישור תושב מהרשות המקומית.',
-      canContactTax: 'ניתן לפנות ישירות למס הכנסה לבדיקת זכאות.',
-      notEligibleGeneric: 'על פי הקריטריונים שהוזנו, לא ניתן לקבל אישור תושב מהרשות המקומית.',
+      disclaimer: 'הערה חשובה: מערכת זו הינה כלי עזר לבדיקת המסמכים הנדרשים בלבד ואינה מהווה חוות דעת משפטית. הקביעה הסופית נתונה לשיקול דעתה הבלעדי של הרשות המוסמכת.',
       emailContact: 'פנייה במייל:',
-      currentYearNote: 'לשנה השוטפת:',
-      previousYearsNote: 'לשנים קודמות:',
-      submitWithTaxReturn: 'יש להגיש במסגרת הגשת בקשה להחזר מס',
-      submitWithAnnualReport: 'יש להגיש במסגרת הגשת דוח שנתי בצירוף הוכחות למרכז חיים',
       taxEmail: 'ornara@taxes.gov.il',
-      descriptions: {
-        employeeHaifaSouth: 'כשכיר העובד בחיפה ודרומה ללא אישור נסיעות מחוסנייה, יש לפנות ישירות למס הכנסה במייל.',
-        selfEmployedHome: 'כעצמאי העובד מהבית ולא ממשרד או חנות, עליך להגיש את בקשתך במסגרת הגשת דוח שנתי למס הכנסה בצירוף הוכחות למרכז חיים.',
-        employeePreviousYears: 'להחזר מס עבור שנים קודמות, יש להגיש בקשה במסגרת הגשת בקשה להחזר מס.'
-      },
+      cannotContinue: 'לא ניתן להמשיך',
       questions: {
         isResident: 'האם אתה רשום במרשם התושבים בחוסנייה?',
         livesInHusniyya: 'האם אתה מתגורר בפועל בחוסנייה?',
@@ -88,19 +71,18 @@ const ResidentEligibilityChecker = () => {
         noPayments: 'לא, אין תשלומים על שמי'
       },
       failMessages: {
-        notResident: 'לא ניתן להמשיך - יש להיות רשום במרשם התושבים בחוסנייה',
-        notLivingInHusniyya: 'לא ניתן להמשיך - יש להתגורר בפועל בחוסנייה',
-        married: 'טופס זה מיועד לרווקים בלבד. נשואים יכולים לקבל אישור תושב ישירות מהרשות המקומית.',
-        spouseNotInHusniyya: 'לא זכאי - בן/בת הזוג חייב/ת להיות רשום/ה ומתגורר/ת בחוסנייה'
+        notResident: 'יש להיות רשום במרשם התושבים בחוסנייה',
+        notLivingInHusniyya: 'יש להתגורר בפועל בחוסנייה',
+        spouseNotInHusniyya: 'בן/בת הזוג חייב/ת להיות רשום/ה ומתגורר/ת בחוסנייה'
       },
       requirements: {
-        idWithAppendix: 'תעודת זהות כולל ספח (חובה)',
+        idWithAppendix: 'תעודת זהות כולל ספח',
         arnonaPayment: 'תשלום ארנונה',
         waterPayment: 'תשלום מים',
         rentPayment: 'תשלום שכירות',
         rentalContract: 'חוזה שכירות',
         employerApproval: 'אישור מעסיק על מיקום עבודה בפועל ותשלום נסיעות',
-        travelApproval: 'אישור נסיעות/הסעה מחוסנייה או אישור החזר נסיעות לצפון (תקרה: 22.60 ש"ח ליום / 488 ש"ח לחודש)',
+        travelApproval: 'אישור נסיעות/הסעה מחוסנייה או אישור החזר נסיעות לצפון',
         securityApproval: 'אישור מיחידת השירות על תנאי השירות (בסיס סגור/קרוב למקום מגורים)',
         form1312: 'טופס 1312 מלא',
         rentAssistance: 'אישור על השתתפות בשכ"ד ע"י כוחות הביטחון (אם רלוונטי)',
@@ -117,8 +99,8 @@ const ResidentEligibilityChecker = () => {
       }
     },
     ar: {
-      title: 'فحص الأهلية لشهادة إقامة',
-      subtitle: 'نظام لفحص الأهلية للحصول على شهادة إقامة في بلدة مؤهلة للعزاب',
+      title: 'فحص المستندات المطلوبة',
+      subtitle: 'تحقق من المستندات التي يجب تقديمها حسب حالتك الشخصية',
       council: 'مجلس مسغاف - الحسينية',
       step: 'مرحلة',
       question: 'سؤال',
@@ -126,34 +108,19 @@ const ResidentEligibilityChecker = () => {
       completed: 'اكتمل',
       startOver: 'ابدأ من جديد',
       newCheck: 'فحص جديد',
-      showDocs: 'عرض المستندات المطلوبة',
-      hideDocs: 'إخفاء المستندات المطلوبة',
-      docsForSecretary: 'مستندات للتقديم للسكرتارية:',
-      cannotContinue: 'لا يمكن المتابعة',
-      referToTax: 'يجب التوجه لضريبة الدخل',
-      notEligible: 'غير مؤهل للحصول على شهادة من السلطة المحلية',
-      eligible: 'أنت مؤهل/ة للحصول على شهادة إقامة!',
-      canGetFromCouncil: 'يمكن الحصول على شهادة إقامة من السلطة المحلية (مجلس مسغاف)',
+      requiredDocs: 'المستندات المطلوبة للتقديم:',
+      submitTo: 'يجب تقديم المستندات إلى:',
+      localAuthority: 'السلطة المحلية (مجلس مسغاف)',
+      taxAuthority: 'سلطة الضرائب',
       fillForm: 'تعبئة نموذج الطلب:',
-      docsToAttach: 'مستندات للإرفاق حسب ملحق',
       important: 'مهم:',
       taxRefundLimit: 'يمكن تقديم طلب استرداد ضريبة حتى 6 سنوات للخلف فقط',
       footerNote: 'هذا النظام مبني على تعليمات سلطة الضرائب بتاريخ 26 أكتوبر 2025.',
       footerContact: 'لأسئلة إضافية يمكن التوجه لسكرتارية المجلس.',
-      disclaimer: 'ملاحظة هامة: هذا النظام هو أداة مساعدة أوتوماتيكية للفحص الأولي فقط ولا يشكل رأياً قانونياً أو ضماناً للأهلية. النتائج المعروضة هي للتقييم العام فقط وقد تحتوي على أخطاء. القرار النهائي يعود للسلطة المختصة حصرياً. استخدام هذا النظام يكون على مسؤولية المستخدم وحده، واللجنة المحلية غير مسؤولة عن أي ضرر أو خسارة ناتجة عن الاعتماد على نتائج الفحص.',
-      securityFarMsg: 'كرجل أمن يخدم في قاعدة مفتوحة بعيدة عن مكان سكنك، لا يمكن الحصول على شهادة إقامة من السلطة المحلية.',
-      canContactTax: 'يمكن التوجه مباشرة لضريبة الدخل لفحص الأهلية.',
-      notEligibleGeneric: 'حسب المعايير المدخلة، لا يمكن الحصول على شهادة إقامة من السلطة المحلية.',
+      disclaimer: 'ملاحظة هامة: هذا النظام هو أداة مساعدة لفحص المستندات المطلوبة فقط ولا يشكل رأياً قانونياً. القرار النهائي يعود للسلطة المختصة حصرياً.',
       emailContact: 'التواصل عبر البريد:',
-      currentYearNote: 'للسنة الحالية:',
-      previousYearsNote: 'للسنوات السابقة:',
-      submitWithTaxReturn: 'يجب تقديمه ضمن طلب استرداد الضريبة',
-      submitWithAnnualReport: 'يجب تقديمه ضمن التقرير السنوي مع إثباتات مركز الحياة',
       taxEmail: 'ornara@taxes.gov.il',
-      descriptions: {
-        employeeHaifaSouth: 'كأجير يعمل في حيفا وجنوباً بدون تصديق مواصلات من الحسينية، يجب التوجه مباشرة لضريبة الدخل عبر البريد الإلكتروني.',
-        selfEmployedHome: 'كمستقل يعمل من البيت وليس من مكتب أو محل، عليك تقديم طلبك ضمن التقرير السنوي لضريبة الدخل مع إثباتات مركز الحياة.'
-      },
+      cannotContinue: 'لا يمكن المتابعة',
       questions: {
         isResident: 'هل أنت مسجل في سجل السكان في الحسينية؟',
         livesInHusniyya: 'هل تسكن فعلياً في الحسينية؟',
@@ -195,19 +162,18 @@ const ResidentEligibilityChecker = () => {
         noPayments: 'لا، لا توجد دفعات على اسمي'
       },
       failMessages: {
-        notResident: 'لا يمكن المتابعة - يجب أن تكون مسجلاً في سجل السكان في الحسينية',
-        notLivingInHusniyya: 'لا يمكن المتابعة - يجب أن تسكن فعلياً في الحسينية',
-        married: 'هذا النموذج مخصص للعزاب فقط. المتزوجون يمكنهم الحصول على شهادة إقامة مباشرة من السلطة المحلية.',
-        spouseNotInHusniyya: 'غير مؤهل - يجب أن يكون الزوج/الزوجة مسجل/ة ويسكن/تسكن في الحسينية'
+        notResident: 'يجب أن تكون مسجلاً في سجل السكان في الحسينية',
+        notLivingInHusniyya: 'يجب أن تسكن فعلياً في الحسينية',
+        spouseNotInHusniyya: 'يجب أن يكون الزوج/الزوجة مسجل/ة ويسكن/تسكن في الحسينية'
       },
       requirements: {
-        idWithAppendix: 'بطاقة هوية مع الملحق (إلزامي)',
+        idWithAppendix: 'بطاقة هوية مع الملحق',
         arnonaPayment: 'دفعة أرنونا',
         waterPayment: 'دفعة مياه',
         rentPayment: 'دفعة إيجار',
         rentalContract: 'عقد إيجار',
         employerApproval: 'تصديق من المشغل على موقع العمل الفعلي ودفع تكاليف السفر',
-        travelApproval: 'تصديق مواصلات/باص من الحسينية أو تصديق استرداد مواصلات للشمال (سقف: 22.60 ش.ج لليوم / 488 ش.ج للشهر)',
+        travelApproval: 'تصديق مواصلات/باص من الحسينية أو تصديق استرداد مواصلات للشمال',
         securityApproval: 'تصديق من الوحدة على ظروف الخدمة (قاعدة مغلقة/قريبة من مكان السكن)',
         form1312: 'نموذج 1312 معبأ',
         rentAssistance: 'تصديق على المشاركة في الإيجار من قوات الأمن (إذا كان ذلك مناسباً)',
@@ -348,18 +314,16 @@ const ResidentEligibilityChecker = () => {
     // Check for immediate fail conditions
     if (currentQuestion.failOnValue && value === currentQuestion.failOnValue) {
       setResult({
-        eligible: false,
-        message: currentQuestion.failMessage,
-        type: 'notApplicable'
+        cannotProceed: true,
+        message: currentQuestion.failMessage
       });
       return;
     }
 
     if (value === 'no' && currentQuestion.id === 'isResident') {
       setResult({
-        eligible: false,
-        message: currentQuestion.failMessage,
-        type: 'notResident'
+        cannotProceed: true,
+        message: currentQuestion.failMessage
       });
       return;
     }
@@ -369,13 +333,13 @@ const ResidentEligibilityChecker = () => {
     const nextStep = currentStep + 1;
 
     if (nextStep >= updatedVisibleQuestions.length) {
-      evaluateEligibility(newAnswers);
+      evaluateRequirements(newAnswers);
     } else {
       setCurrentStep(nextStep);
     }
   };
 
-  const evaluateEligibility = (finalAnswers) => {
+  const evaluateRequirements = (finalAnswers) => {
     const {
       livingArrangement,
       employmentType,
@@ -386,18 +350,16 @@ const ResidentEligibilityChecker = () => {
       hasUtilityPayments
     } = finalAnswers;
 
-    let eligible = false;
-    let eligibilityPath = '';
     let requirements = [];
+    let submitTo = 'localAuthority';
+    let showEmail = false;
 
-    // אנשי קבע וכוחות ביטחון
+    // Always start with ID
+    requirements.push(t.requirements.idWithAppendix);
+
+    // Security forces
     if (employmentType === 'security') {
       if (securityBaseType === 'closed' || securityBaseType === 'nearby') {
-        eligible = true;
-        eligibilityPath = 'security';
-        requirements = [t.requirements.idWithAppendix];
-        
-        // לפי סוג המגורים
         if (livingArrangement === 'rental') {
           requirements.push(t.requirements.rentPayment);
           requirements.push(t.requirements.rentalContract);
@@ -405,23 +367,24 @@ const ResidentEligibilityChecker = () => {
           requirements.push(t.requirements.arnonaPayment);
           requirements.push(t.requirements.waterPayment);
         }
-        
         requirements.push(t.requirements.securityApproval);
         if (securityBaseType === 'closed') {
           requirements.push(t.requirements.rentAssistance);
         }
       } else {
-        eligible = false;
-        eligibilityPath = 'securityFar';
+        // Far open base - submit to tax authority
+        submitTo = 'taxAuthority';
+        showEmail = true;
+        requirements = [
+          t.requirements.declaration,
+          t.requirements.form1312Copy,
+          t.requirements.creditCards,
+          t.requirements.lifeCenterProof
+        ];
       }
     }
-    // עצמאים עם עסק פיזי באזור
+    // Self-employed with physical business
     else if (employmentType === 'selfEmployed' && selfEmployedType === 'physical') {
-      eligible = true;
-      eligibilityPath = 'selfEmployedPhysical';
-      requirements = [t.requirements.idWithAppendix];
-      
-      // לפי סוג המגורים
       if (livingArrangement === 'rental') {
         requirements.push(t.requirements.rentPayment);
         requirements.push(t.requirements.rentalContract);
@@ -429,83 +392,35 @@ const ResidentEligibilityChecker = () => {
         requirements.push(t.requirements.arnonaPayment);
         requirements.push(t.requirements.waterPayment);
       }
-      
       requirements.push(t.requirements.businessTax);
       requirements.push(t.requirements.businessDocs);
     }
-    // עצמאים שעובדים מהבית בלבד - הפניה לדוח שנתי (נספח א)
+    // Self-employed working from home - submit to tax authority
     else if (employmentType === 'selfEmployed' && selfEmployedType === 'homeOnly') {
-      eligible = false;
-      eligibilityPath = 'selfEmployedHome';
-      return setResult({
-        eligible: false,
-        eligibilityPath,
-        referToTaxAuthority: true,
-        email: 'ornara@taxes.gov.il',
-        appendix: language === 'he' ? 'א' : 'أ',
-        requirements: [
-          t.requirements.declaration,
-          t.requirements.form1312Copy,
-          t.requirements.creditCards,
-          t.requirements.lifeCenterProof,
-          t.requirements.companyApproval,
-          t.requirements.homeBusinessDocs
-        ],
-        answers: finalAnswers
-      });
+      submitTo = 'taxAuthority';
+      showEmail = true;
+      requirements = [
+        t.requirements.declaration,
+        t.requirements.form1312Copy,
+        t.requirements.creditCards,
+        t.requirements.lifeCenterProof,
+        t.requirements.companyApproval,
+        t.requirements.homeBusinessDocs
+      ];
     }
-    // שכיר העובד בקרבת מקום מגוריו - תמיד זכאי
+    // Employee working nearby
     else if (employmentType === 'employee' && workLocation === 'nearby') {
-      eligible = true;
-      eligibilityPath = 'employeeNearby';
-      requirements = [t.requirements.idWithAppendix];
-      
-      // לפי סוג המגורים
       if (livingArrangement === 'rental') {
-        // שכירות - צריך תשלום שכירות וחוזה
         requirements.push(t.requirements.rentPayment);
         requirements.push(t.requirements.rentalContract);
       } else if (livingArrangement === 'owned') {
-        // בעלות - צריך תשלום ארנונה ומים
         requirements.push(t.requirements.arnonaPayment);
         requirements.push(t.requirements.waterPayment);
       }
-      // בסוף - אישור מעסיק
       requirements.push(t.requirements.employerApproval);
     }
-    // בעל דירה עם תשלומים על שמו - זכאי (גם אם עובד רחוק)
-    else if (livingArrangement === 'owned' && hasUtilityPayments === 'yes') {
-      eligible = true;
-      eligibilityPath = 'ownedWithPayments';
-      requirements = [
-        t.requirements.idWithAppendix,
-        t.requirements.arnonaPayment,
-        t.requirements.waterPayment
-      ];
-      if (employmentType === 'employee') {
-        requirements.push(t.requirements.employerApproval);
-      }
-    }
-    // שכיר בשכירות עם תשלומים - זכאי (גם אם עובד רחוק)
-    else if (livingArrangement === 'rental' && hasUtilityPayments === 'yes') {
-      eligible = true;
-      eligibilityPath = 'rentalWithPayments';
-      requirements = [
-        t.requirements.idWithAppendix,
-        t.requirements.rentPayment,
-        t.requirements.rentalContract
-      ];
-      if (employmentType === 'employee') {
-        requirements.push(t.requirements.employerApproval);
-      }
-    }
-    // שכיר העובד בחיפה ודרומה עם אישור נסיעות מחוסנייה - זכאי
+    // Employee in Haifa/South with travel approval
     else if (employmentType === 'employee' && workLocation === 'haifa_south' && hasTravelFromHusniyya === 'yes') {
-      eligible = true;
-      eligibilityPath = 'employeeSouthWithTravel';
-      requirements = [t.requirements.idWithAppendix];
-      
-      // לפי סוג המגורים
       if (livingArrangement === 'rental') {
         requirements.push(t.requirements.rentPayment);
         requirements.push(t.requirements.rentalContract);
@@ -513,35 +428,48 @@ const ResidentEligibilityChecker = () => {
         requirements.push(t.requirements.arnonaPayment);
         requirements.push(t.requirements.waterPayment);
       }
-      
       requirements.push(t.requirements.travelApproval);
     }
-    // שכיר העובד בחיפה ודרומה ללא אישור נסיעות - הפניה למס הכנסה (נספח א)
+    // Employee in Haifa/South without travel approval - submit to tax authority
     else if (employmentType === 'employee' && workLocation === 'haifa_south') {
-      eligible = false;
-      eligibilityPath = 'employeeHaifaSouth';
-      return setResult({
-        eligible: false,
-        eligibilityPath,
-        referToTaxAuthority: true,
-        email: 'ornara@taxes.gov.il',
-        appendix: language === 'he' ? 'א' : 'أ',
-        requirements: [
-          t.requirements.declaration,
-          t.requirements.form1312Copy,
-          t.requirements.rentProofIfNoPayments,
-          t.requirements.creditCards,
-          t.requirements.employerApproval,
-          t.requirements.additionalProofs
-        ],
-        answers: finalAnswers
-      });
+      submitTo = 'taxAuthority';
+      showEmail = true;
+      requirements = [
+        t.requirements.declaration,
+        t.requirements.form1312Copy,
+        t.requirements.rentProofIfNoPayments,
+        t.requirements.creditCards,
+        t.requirements.employerApproval,
+        t.requirements.additionalProofs
+      ];
+    }
+    // Owner with payments
+    else if (livingArrangement === 'owned' && hasUtilityPayments === 'yes') {
+      requirements.push(t.requirements.arnonaPayment);
+      requirements.push(t.requirements.waterPayment);
+      if (employmentType === 'employee') {
+        requirements.push(t.requirements.employerApproval);
+      }
+    }
+    // Rental with payments
+    else if (livingArrangement === 'rental' && hasUtilityPayments === 'yes') {
+      requirements.push(t.requirements.rentPayment);
+      requirements.push(t.requirements.rentalContract);
+      if (employmentType === 'employee') {
+        requirements.push(t.requirements.employerApproval);
+      }
+    }
+    // Living with parents
+    else if (livingArrangement === 'parents') {
+      if (employmentType === 'employee') {
+        requirements.push(t.requirements.employerApproval);
+      }
     }
 
     setResult({
-      eligible,
-      eligibilityPath,
       requirements,
+      submitTo,
+      showEmail,
       answers: finalAnswers
     });
   };
@@ -550,16 +478,15 @@ const ResidentEligibilityChecker = () => {
     setCurrentStep(0);
     setAnswers({});
     setResult(null);
-    setShowRequirements(false);
   };
 
   const getResultContent = () => {
     if (!result) return null;
 
-    if (result.type === 'notResident' || result.type === 'notApplicable') {
+    if (result.cannotProceed) {
       return (
-        <div className="result-card not-eligible">
-          <div className="result-icon">✕</div>
+        <div className="result-card cannot-proceed">
+          <div className="result-icon">!</div>
           <h2>{t.cannotContinue}</h2>
           <p>{result.message}</p>
           <button onClick={resetForm} className="reset-btn">
@@ -569,101 +496,46 @@ const ResidentEligibilityChecker = () => {
       );
     }
 
-    // הפניה למס הכנסה
-    if (result.referToTaxAuthority) {
-      return (
-        <div className="result-card referral">
-          <div className="result-icon">→</div>
-          <h2>{t.referToTax}</h2>
-          <p>{t.descriptions[result.eligibilityPath]}</p>
-          
-          {result.email && (
-            <div className="email-box">
-              <span className="email-label">{t.emailContact || (language === 'he' ? 'פנייה במייל:' : 'التواصل عبر البريد:')}}</span>
-              <a href={`mailto:${result.email}`} className="email-link">{result.email}</a>
-            </div>
-          )}
-
-
-          <div className="referral-info">
-            <h3>{t.docsToAttach} {result.appendix}:</h3>
-            <ul>
-              {result.requirements.map((req, index) => (
-                <li key={index}>{req}</li>
-              ))}
-            </ul>
-          </div>
-
-          {result.eligibilityPath === 'employeePreviousYears' && (
-            <div className="important-note">
-              <strong>{t.important}</strong> {t.taxRefundLimit}
-            </div>
-          )}
-
-          <button onClick={resetForm} className="reset-btn">
-            {t.startOver}
-          </button>
-        </div>
-      );
-    }
-
-    // לא זכאי - כוחות ביטחון בבסיס פתוח רחוק
-    if (!result.eligible && result.eligibilityPath === 'securityFar') {
-      return (
-        <div className="result-card not-eligible">
-          <div className="result-icon">✕</div>
-          <h2>{t.notEligible}</h2>
-          <p>{t.securityFarMsg}</p>
-          <p>{t.canContactTax}</p>
-          <button onClick={resetForm} className="reset-btn">
-            {t.startOver}
-          </button>
-        </div>
-      );
-    }
-
-    if (!result.eligible) {
-      return (
-        <div className="result-card not-eligible">
-          <div className="result-icon">✕</div>
-          <h2>{t.notEligible}</h2>
-          <p>{t.notEligibleGeneric}</p>
-          <button onClick={resetForm} className="reset-btn">
-            {t.startOver}
-          </button>
-        </div>
-      );
-    }
-
     return (
-      <div className="result-card eligible">
-        <div className="result-icon">✓</div>
-        <h2>{t.eligible}</h2>
-        <p>{t.canGetFromCouncil}</p>
-        
-        <div className="form-link-box">
-          <span className="form-label">{t.fillForm}</span>
-          <a href="https://mas.misgav.org.il" target="_blank" rel="noopener noreferrer" className="form-link">mas.misgav.org.il</a>
-        </div>
-        
-        <button 
-          onClick={() => setShowRequirements(!showRequirements)} 
-          className="toggle-requirements-btn"
-        >
-          {showRequirements ? t.hideDocs : t.showDocs}
-        </button>
+      <div className="result-card documents">
+        <div className="result-icon">📋</div>
+        <h2>{t.requiredDocs}</h2>
 
-        {showRequirements && (
-          <div className="requirements-section">
-            <h3>{t.docsForSecretary}</h3>
-            <ul>
-              {result.requirements.map((req, index) => (
-                <li key={index}>
-                  <span className="check-icon">✓</span>
-                  {req}
-                </li>
-              ))}
-            </ul>
+        <div className="submit-to-box">
+          <span className="submit-label">{t.submitTo}</span>
+          <span className="submit-value">
+            {result.submitTo === 'localAuthority' ? t.localAuthority : t.taxAuthority}
+          </span>
+        </div>
+
+        {result.showEmail && (
+          <div className="email-box">
+            <span className="email-label">{t.emailContact}</span>
+            <a href={`mailto:${t.taxEmail}`} className="email-link">{t.taxEmail}</a>
+          </div>
+        )}
+
+        {result.submitTo === 'localAuthority' && (
+          <div className="form-link-box">
+            <span className="form-label">{t.fillForm}</span>
+            <a href="https://mas.misgav.org.il" target="_blank" rel="noopener noreferrer" className="form-link">mas.misgav.org.il</a>
+          </div>
+        )}
+
+        <div className="requirements-section">
+          <ul>
+            {result.requirements.map((req, index) => (
+              <li key={index}>
+                <span className="check-icon">✓</span>
+                {req}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {result.submitTo === 'taxAuthority' && (
+          <div className="important-note">
+            <strong>{t.important}</strong> {t.taxRefundLimit}
           </div>
         )}
 
@@ -689,14 +561,6 @@ const ResidentEligibilityChecker = () => {
           padding: 0;
           position: relative;
           overflow: hidden;
-        }
-
-        .eligibility-checker::before {
-          display: none;
-        }
-
-        .eligibility-checker::after {
-          display: none;
         }
 
         .container {
@@ -736,34 +600,6 @@ const ResidentEligibilityChecker = () => {
           padding: 40px 24px;
           border-radius: 16px;
           margin: -40px -20px 40px -20px;
-        }
-
-        .logo-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 12px;
-          background: rgba(255,255,255,0.15);
-          padding: 12px 24px;
-          border-radius: 50px;
-          border: 1px solid rgba(255,255,255,0.2);
-          margin-bottom: 24px;
-        }
-
-        .logo-icon {
-          width: 40px;
-          height: 40px;
-          background: #fff;
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-        }
-
-        .logo-text {
-          color: #fff;
-          font-size: 14px;
-          font-weight: 500;
         }
 
         .header h1 {
@@ -922,19 +758,13 @@ const ResidentEligibilityChecker = () => {
           font-weight: 700;
         }
 
-        .result-card.eligible .result-icon {
-          background: #48bb78;
+        .result-card.documents .result-icon {
+          background: #4299e1;
           color: #fff;
-          box-shadow: 0 10px 30px rgba(72, 187, 120, 0.3);
+          box-shadow: 0 10px 30px rgba(66, 153, 225, 0.3);
         }
 
-        .result-card.not-eligible .result-icon {
-          background: #e53e3e;
-          color: #fff;
-          box-shadow: 0 10px 30px rgba(229, 62, 62, 0.3);
-        }
-
-        .result-card.referral .result-icon {
+        .result-card.cannot-proceed .result-icon {
           background: #ed8936;
           color: #fff;
           box-shadow: 0 10px 30px rgba(237, 137, 54, 0.3);
@@ -944,7 +774,7 @@ const ResidentEligibilityChecker = () => {
           color: #1a365d;
           font-size: 28px;
           font-weight: 700;
-          margin: 0 0 12px 0;
+          margin: 0 0 24px 0;
         }
 
         .result-card > p {
@@ -954,118 +784,35 @@ const ResidentEligibilityChecker = () => {
           line-height: 1.6;
         }
 
-        .toggle-requirements-btn {
-          background: #1a365d;
-          border: none;
-          border-radius: 10px;
-          padding: 16px 32px;
-          color: #fff;
-          font-size: 16px;
-          font-weight: 600;
-          font-family: inherit;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          margin-bottom: 24px;
-        }
-
-        .toggle-requirements-btn:hover {
-          background: #2c5282;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(26, 54, 93, 0.3);
-        }
-
-        .requirements-section {
-          background: #f0fff4;
-          border: 2px solid #48bb78;
-          border-radius: 12px;
-          padding: 28px;
-          margin: 24px 0;
-          text-align: right;
-          animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        .requirements-section h3 {
-          color: #276749;
-          font-size: 18px;
-          font-weight: 600;
-          margin: 0 0 20px 0;
-        }
-
-        .requirements-section ul {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
-
-        .requirements-section li {
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          color: #1a365d;
-          font-size: 15px;
-          padding: 10px 0;
-          border-bottom: 1px solid #c6f6d5;
-          line-height: 1.5;
-        }
-
-        .requirements-section li:last-child {
-          border-bottom: none;
-        }
-
-        .check-icon {
-          color: #48bb78;
-          font-weight: 700;
-          flex-shrink: 0;
-        }
-
-        .referral-info {
-          background: #fffaf0;
-          border: 2px solid #ed8936;
-          border-radius: 12px;
-          padding: 24px;
-          margin: 24px 0;
-          text-align: right;
-        }
-
-        .referral-info h3 {
-          color: #c05621;
-          font-size: 16px;
-          font-weight: 600;
-          margin: 0 0 16px 0;
-        }
-
-        .referral-info ul {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
-
-        .referral-info li {
-          color: #1a365d;
-          font-size: 14px;
-          padding: 8px 0;
-          padding-right: 20px;
-          position: relative;
-        }
-
-        .referral-info li::before {
-          content: '•';
-          position: absolute;
-          right: 0;
-          color: #ed8936;
-        }
-
-        .email-box {
+        .submit-to-box {
           background: #ebf8ff;
           border: 2px solid #4299e1;
           border-radius: 12px;
+          padding: 20px 28px;
+          margin: 0 0 20px 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .submit-label {
+          color: #718096;
+          font-size: 14px;
+        }
+
+        .submit-value {
+          color: #2b6cb0;
+          font-size: 18px;
+          font-weight: 700;
+        }
+
+        .email-box {
+          background: #faf5ff;
+          border: 2px solid #9f7aea;
+          border-radius: 12px;
           padding: 16px 24px;
-          margin: 20px 0;
+          margin: 0 0 20px 0;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -1078,7 +825,7 @@ const ResidentEligibilityChecker = () => {
         }
 
         .email-link {
-          color: #2b6cb0;
+          color: #6b46c1;
           font-size: 18px;
           font-weight: 600;
           text-decoration: none;
@@ -1094,7 +841,7 @@ const ResidentEligibilityChecker = () => {
           border: 2px solid #48bb78;
           border-radius: 12px;
           padding: 20px 28px;
-          margin: 24px 0;
+          margin: 0 0 24px 0;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -1123,19 +870,63 @@ const ResidentEligibilityChecker = () => {
           transform: scale(1.02);
         }
 
+        .requirements-section {
+          background: #f8fafc;
+          border: 2px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 28px;
+          margin: 24px 0;
+          text-align: right;
+        }
+
+        .requirements-section ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+
+        .requirements-section li {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          color: #1a365d;
+          font-size: 15px;
+          padding: 12px 0;
+          border-bottom: 1px solid #e2e8f0;
+          line-height: 1.5;
+        }
+
+        .requirements-section li:last-child {
+          border-bottom: none;
+        }
+
+        .check-icon {
+          color: #48bb78;
+          font-weight: 700;
+          flex-shrink: 0;
+          width: 24px;
+          height: 24px;
+          background: #f0fff4;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 14px;
+        }
+
         .important-note {
-          background: #fff5f5;
-          border: 2px solid #e53e3e;
+          background: #fffaf0;
+          border: 2px solid #ed8936;
           border-radius: 12px;
           padding: 16px 20px;
           margin: 20px 0;
-          color: #c53030;
+          color: #c05621;
           font-size: 14px;
           text-align: center;
         }
 
         .important-note strong {
-          color: #c53030;
+          color: #c05621;
         }
 
         .reset-btn {
@@ -1205,7 +996,7 @@ const ResidentEligibilityChecker = () => {
         }
 
         @media (max-width: 600px) {
-          .eligibility-checker {
+          .container {
             padding: 24px 16px;
           }
 
@@ -1216,8 +1007,17 @@ const ResidentEligibilityChecker = () => {
             font-size: 13px;
           }
 
+          .header {
+            padding: 30px 20px;
+            margin: -24px -16px 30px -16px;
+          }
+
           .header h1 {
-            font-size: 26px;
+            font-size: 24px;
+          }
+
+          .header p {
+            font-size: 14px;
           }
 
           .question-card {
@@ -1238,13 +1038,21 @@ const ResidentEligibilityChecker = () => {
           }
 
           .result-card h2 {
-            font-size: 24px;
+            font-size: 22px;
+          }
+
+          .requirements-section {
+            padding: 20px;
+          }
+
+          .requirements-section li {
+            font-size: 14px;
           }
         }
       `}</style>
 
       <div className="container">
-        <button 
+        <button
           className="lang-switch"
           onClick={() => setLanguage(language === 'he' ? 'ar' : 'he')}
         >
@@ -1257,7 +1065,7 @@ const ResidentEligibilityChecker = () => {
         </header>
 
         <div className="disclaimer-box">
-          <div className="disclaimer-icon">⚠️</div>
+          <div className="disclaimer-icon">ℹ️</div>
           <p className="disclaimer-text">{t.disclaimer}</p>
         </div>
 
