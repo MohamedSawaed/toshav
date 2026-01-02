@@ -19,7 +19,7 @@ const OfficialDocumentRequest = () => {
   const [submissionId, setSubmissionId] = useState('');
 
   const documentTypes = [
-    { id: 'residency', label: 'شهادة إقامة', labelHe: 'אישור תושבות', icon: '🏠' },
+    { id: 'residency', label: 'شهادة إقامة', labelHe: 'אישור התגוררות', icon: '🏠' },
     { id: 'confirmation', label: 'تأكيد معلومات', labelHe: 'אישור פרטים', icon: '✅' },
     { id: 'other', label: 'أخرى', labelHe: 'אחר', icon: '📋' }
   ];

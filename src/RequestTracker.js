@@ -111,7 +111,7 @@ const RequestTracker = () => {
     const types = {
       documentAuth: { ar: 'مصادقة مستند', he: 'אימות מסמך' },
       officialDoc: { ar: 'مستند رسمي', he: 'מסמך רשמי' },
-      certificate: { ar: 'شهادة سكن', he: 'אישור תושבות' }
+      certificate: { ar: 'شهادة سكن', he: 'אישור התגוררות' }
     };
     return types[type] || { ar: type, he: type };
   };
